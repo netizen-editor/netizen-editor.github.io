@@ -269,7 +269,6 @@
       <button data-tool="triangle" title="Tam giác">△</button>
       <button data-tool="star" title="Ngôi sao">☆</button>
       <button data-tool="line" title="Đường kẻ">╱</button>
-      <button data-tool="statusbar" title="Thanh trạng thái (Sóng, Wifi, Pin)">📱</button>
     </aside>
     <section class="canvas-area">
       <div id="canvas-scroll">
@@ -968,59 +967,10 @@ document.querySelectorAll('.left-tools button').forEach(b => {
     const t = b.dataset.tool;
     if (t === 'text') addText();
     else if (t === 'image') $('file-image').click();
-    else if (t === 'statusbar') addStatusBar(); // Thêm dòng này
     else addShape(t);
   });
 });
 
- function addStatusBar() {
-  const scale = 1.5;
-  
-  // 1. Sóng di động
-  const s1 = new fabric.Rect({ width: 4*scale, height: 8*scale, fill: '#333', rx: 1, ry: 1, left: 0, top: 12*scale });
-  const s2 = new fabric.Rect({ width: 4*scale, height: 12*scale, fill: '#333', rx: 1, ry: 1, left: 6*scale, top: 8*scale });
-  const s3 = new fabric.Rect({ width: 4*scale, height: 16*scale, fill: '#333', rx: 1, ry: 1, left: 12*scale, top: 4*scale });
-  const s4 = new fabric.Rect({ width: 4*scale, height: 20*scale, fill: '#333', rx: 1, ry: 1, left: 18*scale, top: 0 });
-  const signalGroup = new fabric.Group([s1, s2, s3, s4], { left: 0, top: 0 });
-
-  // 2. Wifi (Dùng path chuẩn)
-  const wifiPath = "M12 21a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm-2.8-7.2c1.6-1.2 4-1.2 5.6 0l1.6-1.6a8 8 0 0 0-8.8 0l1.6 1.6zm-3.2-3.2c3.2-2.4 8-2.4 11.2 0l1.6-1.6a12 12 0 0 0-14.4 0l1.6 1.6z";
-  const wifiObj = new fabric.Path(wifiPath, { fill: '#333', left: 35*scale, top: 2*scale, scaleX: scale*0.7, scaleY: scale*0.7 });
-
-  // 3. Pin
-  const batBody = new fabric.Rect({ width: 24*scale, height: 12*scale, fill: 'transparent', stroke: '#333', strokeWidth: 2*scale, rx: 2*scale, ry: 2*scale, left: 75*scale, top: 4*scale });
-  const batTip = new fabric.Rect({ width: 2*scale, height: 4*scale, fill: '#333', rx: 1, ry: 1, left: 100*scale, top: 8*scale });
-  // Cột năng lượng (chỉnh độ rộng width này để thay đổi mức pin)
-  const batLevel = new fabric.Rect({ width: 16*scale, height: 6*scale, fill: '#333', left: 78*scale, top: 7*scale }); 
-  
-  // 4. Chữ số % Pin
-  const batText = new fabric.Textbox('7', { fontSize: 12*scale, fontFamily: 'Inter', fill: '#333', left: 83*scale, top: 6*scale, width: 20*scale, textAlign: 'center', fontWeight: 'bold' });
-
-  // Gom tất cả lại thành 1 khối
-  const statusGroup = new fabric.Group([signalGroup, wifiObj, batBody, batTip, batLevel, batText], {
-    left: canvas.getWidth() / 2,
-    top: canvas.getHeight() / 2,
-    originX: 'center',
-    originY: 'center',
-    name: 'Thanh trạng thái'
-  });
-  
-  canvas.add(statusGroup);
-  canvas.setActiveObject(statusGroup);
-  canvas.renderAll();
-}
-
-// Hàm tách nhóm để chỉnh sửa từng phần
-function ungroupSelected() {
-  const activeObject = canvas.getActiveObject();
-  if (!activeObject || activeObject.type !== 'group') return;
-  
-  activeObject.toActiveSelection();
-  canvas.requestRenderAll();
-  saveHistory();
-  markUnsaved();
-  toast('Đã tách nhóm, giờ bạn có thể sửa từng phần', 'success');
-}
 /* ============================================================
    IMAGE UPLOAD
 ============================================================ */
@@ -1316,9 +1266,6 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault(); $('btn-duplicate').click();
   } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
     e.preventDefault(); saveCurrentProject(false);
-  } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'g') {
-    e.preventDefault(); 
-    ungroupSelected();
   }
 });
 
