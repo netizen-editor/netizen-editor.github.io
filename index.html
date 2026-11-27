@@ -700,59 +700,71 @@ function enableSmartGuides(c) {
     c.clearContext(c.contextTop);
     lines = [];
 
-    const objBox = obj.getBoundingRect(true);
-    const objCenter = { x: objBox.left + objBox.width / 2, y: objBox.top + objBox.height / 2 };
-
+    const zoom = c.getZoom();
+    const objBox = obj.getBoundingRect(true); // Tọa độ tuyệt đối (đã nhân zoom)
+    
     const canvasW = c.getWidth();
     const canvasH = c.getHeight();
 
-    const targetsX = [
-      { x: 0 }, { x: canvasW / 2 }, { x: canvasW }
-    ];
-    const targetsY = [
-      { y: 0 }, { y: canvasH / 2 }, { y: canvasH }
-    ];
+    // Mốc căn lề cơ bản của Canvas (Trái, Giữa, Phải, Trên, Giữa, Dưới)
+    const targetsX = [0, canvasW / 2, canvasW];
+    const targetsY = [0, canvasH / 2, canvasH];
 
+    // Lấy mốc căn lề của các object khác
     c.getObjects().forEach(o => {
-      if (o === obj) return;
+      if (o === obj || o.type === 'activeSelection') return;
       const b = o.getBoundingRect(true);
-      targetsX.push({ x: b.left }, { x: b.left + b.width / 2 }, { x: b.left + b.width });
-      targetsY.push({ y: b.top }, { y: b.top + b.height / 2 }, { y: b.top + b.height });
+      targetsX.push(b.left, b.left + b.width / 2, b.left + b.width);
+      targetsY.push(b.top, b.top + b.height / 2, b.top + b.height);
     });
 
-    const objXPoints = [
-      { x: objBox.left }, { x: objCenter.x }, { x: objBox.left + objBox.width }
-    ];
-    const objYPoints = [
-      { y: objBox.top }, { y: objCenter.y }, { y: objBox.top + objBox.height }
-    ];
+    // Các điểm cần check của object đang kéo (Trái, Giữa, Phải, Trên, Giữa, Dưới)
+    const objXPoints = [objBox.left, objBox.left + objBox.width / 2, objBox.left + objBox.width];
+    const objYPoints = [objBox.top, objBox.top + objBox.height / 2, objBox.top + objBox.height];
 
-    let snappedX = false;
+    let snapXDelta = null;
+    let snapYDelta = null;
+
+    // Tìm điểm hít trục X gần nhất
+    let minDistX = snapDistance;
     for (let i = 0; i < objXPoints.length; i++) {
       for (let j = 0; j < targetsX.length; j++) {
-        if (Math.abs(objXPoints[i].x - targetsX[j].x) < snapDistance) {
-          obj.set({ left: obj.left + (targetsX[j].x - objXPoints[i].x) });
-          obj.setCoords();
-          lines.push({ x1: targetsX[j].x, y1: 0, x2: targetsX[j].x, y2: canvasH });
-          snappedX = true;
-          break;
+        const dist = Math.abs(objXPoints[i] - targetsX[j]);
+        if (dist < minDistX) {
+          minDistX = dist;
+          snapXDelta = targetsX[j] - objXPoints[i];
         }
       }
-      if (snappedX) break;
     }
 
-    let snappedY = false;
+    // Tìm điểm hít trục Y gần nhất
+    let minDistY = snapDistance;
     for (let i = 0; i < objYPoints.length; i++) {
       for (let j = 0; j < targetsY.length; j++) {
-        if (Math.abs(objYPoints[i].y - targetsY[j].y) < snapDistance) {
-          obj.set({ top: obj.top + (targetsY[j].y - objYPoints[i].y) });
-          obj.setCoords();
-          lines.push({ x1: 0, y1: targetsY[j].y, x2: canvasW, y2: targetsY[j].y });
-          snappedY = true;
-          break;
+        const dist = Math.abs(objYPoints[i] - targetsY[j]);
+        if (dist < minDistY) {
+          minDistY = dist;
+          snapYDelta = targetsY[j] - objYPoints[i];
         }
       }
-      if (snappedY) break;
+    }
+
+    // Áp dụng hít trục X (chia cho zoom để về tọa độ gốc)
+    if (snapXDelta !== null) {
+      obj.left += snapXDelta / zoom;
+      const finalX = objBox.left + snapXDelta;
+      lines.push({ x1: finalX, y1: 0, x2: finalX, y2: canvasH });
+    }
+
+    // Áp dụng hít trục Y (chia cho zoom để về tọa độ gốc)
+    if (snapYDelta !== null) {
+      obj.top += snapYDelta / zoom;
+      const finalY = objBox.top + snapYDelta;
+      lines.push({ x1: 0, y1: finalY, x2: canvasW, y2: finalY });
+    }
+
+    if (snapXDelta !== null || snapYDelta !== null) {
+      obj.setCoords(); // Cập nhật lại vùng chọn
     }
   });
 
@@ -769,16 +781,18 @@ function enableSmartGuides(c) {
         ctx.beginPath();
         ctx.moveTo(line.x1, line.y1);
         ctx.lineTo(line.x2, line.y2);
-        ctx.strokeStyle = '#a855f7'; // Màu tím giống Canva
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([5, 5]); // Nét đứt cho giống Canva
+        ctx.strokeStyle = '#a855f7'; // Màu tím
+        ctx.lineWidth = 1.5 / c.getZoom(); // Độ dày line không bị ảnh hưởng bởi zoom
+        ctx.setLineDash([5, 5]); // Nét đứt
         ctx.stroke();
       });
       ctx.restore();
     }
   });
 }
- /* ============================================================
+
+ 
+/* ============================================================
    HISTORY
 ============================================================ */
 function saveHistory() {
