@@ -691,42 +691,42 @@ function initCanvas(project) {
 function enableSmartGuides(c) {
   const ctx = c.contextTop;
   let lines = [];
-  const snapDistance = 8; // Khoảng cách hít (px)
+  const snapThreshold = 8; // Khoảng cách hít (pixel màn hình)
 
   c.on('object:moving', function(e) {
     const obj = e.target;
     if (!obj) return;
-    
+
     c.clearContext(c.contextTop);
     lines = [];
 
     const zoom = c.getZoom();
-    const objBox = obj.getBoundingRect(true); // Tọa độ tuyệt đối (đã nhân zoom)
+    const objBox = obj.getBoundingRect();
     
+    // Lấy kích thước thực tế của canvas trên màn hình (đã tính cả zoom)
     const canvasW = c.getWidth();
     const canvasH = c.getHeight();
-
-    // Mốc căn lề cơ bản của Canvas (Trái, Giữa, Phải, Trên, Giữa, Dưới)
+    
+    // Mốc căn lề của Canvas (Trái, Giữa, Phải / Trên, Giữa, Dưới)
     const targetsX = [0, canvasW / 2, canvasW];
     const targetsY = [0, canvasH / 2, canvasH];
 
-    // Lấy mốc căn lề của các object khác
+    // Lấy mốc căn lề của tất cả các object khác
     c.getObjects().forEach(o => {
       if (o === obj || o.type === 'activeSelection') return;
-      const b = o.getBoundingRect(true);
+      const b = o.getBoundingRect();
       targetsX.push(b.left, b.left + b.width / 2, b.left + b.width);
       targetsY.push(b.top, b.top + b.height / 2, b.top + b.height);
     });
 
-    // Các điểm cần check của object đang kéo (Trái, Giữa, Phải, Trên, Giữa, Dưới)
+    // Các điểm cần check của object đang kéo (Trái, Giữa, Phải / Trên, Giữa, Dưới)
     const objXPoints = [objBox.left, objBox.left + objBox.width / 2, objBox.left + objBox.width];
     const objYPoints = [objBox.top, objBox.top + objBox.height / 2, objBox.top + objBox.height];
 
-    let snapXDelta = null;
-    let snapYDelta = null;
+    let snapXDelta = null, snapYDelta = null;
+    let minDistX = snapThreshold, minDistY = snapThreshold;
 
-    // Tìm điểm hít trục X gần nhất
-    let minDistX = snapDistance;
+    // Tìm điểm hít gần nhất trục X
     for (let i = 0; i < objXPoints.length; i++) {
       for (let j = 0; j < targetsX.length; j++) {
         const dist = Math.abs(objXPoints[i] - targetsX[j]);
@@ -737,8 +737,7 @@ function enableSmartGuides(c) {
       }
     }
 
-    // Tìm điểm hít trục Y gần nhất
-    let minDistY = snapDistance;
+    // Tìm điểm hít gần nhất trục Y
     for (let i = 0; i < objYPoints.length; i++) {
       for (let j = 0; j < targetsY.length; j++) {
         const dist = Math.abs(objYPoints[i] - targetsY[j]);
@@ -749,14 +748,14 @@ function enableSmartGuides(c) {
       }
     }
 
-    // Áp dụng hít trục X (chia cho zoom để về tọa độ gốc)
+    // Áp dụng hít trục X (chia cho zoom để trả về đúng hệ tọa độ gốc)
     if (snapXDelta !== null) {
       obj.left += snapXDelta / zoom;
       const finalX = objBox.left + snapXDelta;
       lines.push({ x1: finalX, y1: 0, x2: finalX, y2: canvasH });
     }
 
-    // Áp dụng hít trục Y (chia cho zoom để về tọa độ gốc)
+    // Áp dụng hít trục Y
     if (snapYDelta !== null) {
       obj.top += snapYDelta / zoom;
       const finalY = objBox.top + snapYDelta;
@@ -764,7 +763,7 @@ function enableSmartGuides(c) {
     }
 
     if (snapXDelta !== null || snapYDelta !== null) {
-      obj.setCoords(); // Cập nhật lại vùng chọn
+      obj.setCoords();
     }
   });
 
@@ -777,13 +776,14 @@ function enableSmartGuides(c) {
   c.on('after:render', function() {
     if (lines.length > 0) {
       ctx.save();
+      // Vẽ đường kẻ dựa trên tọa độ màn hình thực tế
       lines.forEach(line => {
         ctx.beginPath();
         ctx.moveTo(line.x1, line.y1);
         ctx.lineTo(line.x2, line.y2);
-        ctx.strokeStyle = '#a855f7'; // Màu tím
-        ctx.lineWidth = 1.5 / c.getZoom(); // Độ dày line không bị ảnh hưởng bởi zoom
-        ctx.setLineDash([5, 5]); // Nét đứt
+        ctx.strokeStyle = '#a855f7'; // Màu tím Canva
+        ctx.lineWidth = 1.5; 
+        ctx.setLineDash([6, 4]); // Nét đứt
         ctx.stroke();
       });
       ctx.restore();
