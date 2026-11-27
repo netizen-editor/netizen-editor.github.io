@@ -863,10 +863,13 @@ function applyZoom(z) {
   if (!canvas || !currentProject) return;
   currentZoom = Math.max(0.05, Math.min(4, z));
   canvas.setZoom(currentZoom);
+  
+  // Cập nhật lại kích thước thật của canvas và wrapper
   canvas.setDimensions({
     width: currentProject.width * currentZoom,
     height: currentProject.height * currentZoom
-  }, { cssOnly: true }); // <--- QUAN TRỌNG: Chỉ đổi kích thước CSS, giữ nguyên độ phân giải gốc
+  }); 
+  
   canvas.renderAll();
   $('zoom-label').textContent = Math.round(currentZoom * 100) + '%';
 }
