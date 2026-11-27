@@ -127,9 +127,9 @@
   .left-tools button.uploading { opacity: .5; pointer-events: none; }
 
   .canvas-area { flex: 1; background: #e5e7eb; display: flex; overflow: hidden; }
-  #canvas-scroll { flex: 1; overflow: auto; }
- #canvas-inner { display: flex; padding: 40px; width: max-content; height: max-content; margin: auto; }
-#canvas-wrap { box-shadow: 0 4px 18px rgba(0,0,0,.12); background: #fff; }
+  #canvas-scroll { flex: 1; overflow: auto; display: flex; background: #e5e7eb; }
+  #canvas-inner { margin: auto; padding: 40px; } /* Dùng margin auto để căn giữa chuẩn xác */
+  #canvas-wrap { box-shadow: 0 4px 18px rgba(0,0,0,.12); background: #fff; }
   #c { display: block; }
 
   .right-panel { width: 300px; background: #fff; border-left: 1px solid #e5e7eb;
@@ -681,7 +681,7 @@ function initCanvas(project) {
 
   canvas.on('object:added', () => { if (!isRestoring) { saveHistory(); markUnsaved(); } refreshLayers(); });
   canvas.on('object:removed', () => { if (!isRestoring) { saveHistory(); markUnsaved(); } refreshLayers(); updateObjectPanel(); });
-  canvas.on('object:modified', () => { if (!isRestoring) { saveHistory(); markUnsaved(); } updateObjectPanel(); });
+  canvas.on('object:modified', () => { if (!isRestoring) { saveHistory(); markUnsaved(); } updateObjectPanel(); canvas.requestRenderAll(); });
   canvas.on('selection:created', () => { updateObjectPanel(); refreshLayers(); });
   canvas.on('selection:updated', () => { updateObjectPanel(); refreshLayers(); });
   canvas.on('selection:cleared', () => { updateObjectPanel(); refreshLayers(); });
@@ -919,9 +919,13 @@ function addText() {
     left: canvas.getWidth() / 2, top: canvas.getHeight() / 2,
     originX: 'center', originY: 'center',
     fontSize: 40, fontFamily: 'Inter', fill: '#1f2937',
-    width: 400, textAlign: 'center'
+    width: 400, textAlign: 'center',
+    splitByGrapheme: true,  // Sửa lỗi xuống dòng của tiếng Việt
+    objectCaching: false    // Tắt cache để chữ không bị tàng hình
   });
-  canvas.add(t); canvas.setActiveObject(t); canvas.renderAll();
+  canvas.add(t); 
+  canvas.setActiveObject(t); 
+  canvas.renderAll();
 }
 
 function getStarPoints(spikes, outerR, innerR) {
