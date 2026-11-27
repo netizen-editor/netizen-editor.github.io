@@ -702,19 +702,18 @@ function enableSmartGuides(c) {
     lines = [];
 
     const zoom = c.getZoom();
+    // Lấy kích thước GỐC của Canvas (không bị ảnh hưởng bởi zoom)
+    const canvasW = currentProject ? currentProject.width : c.width / zoom;
+    const canvasH = currentProject ? currentProject.height : c.height / zoom;
+
+    // Lấy tọa độ GỐC của object đang kéo
+    const objBox = obj.getBoundingRect();
     
-    // TẤT CẢ TỌA ĐỘ DƯỚI ĐÂY ĐỀU LÀ PIXEL TRÊN MÀN HÌNH (ĐÃ TÍNH CẢ ZOOM)
-    const canvasW = c.getWidth();
-    const canvasH = c.getHeight();
-    
-    // getBoundingRect() trả về tọa độ màn hình thực tế
-    const objBox = obj.getBoundingRect(); 
-    
-    // Mốc căn lề của màn hình (Trái, Giữa, Phải / Trên, Giữa, Dưới)
+    // Các mốc căn lề GỐC của canvas
     let targetsX = [0, canvasW / 2, canvasW];
     let targetsY = [0, canvasH / 2, canvasH];
 
-    // Mốc căn lề của các object khác
+    // Các mốc căn lề GỐC của object khác
     c.getObjects().forEach(o => {
       if (o === obj || o.type === 'activeSelection') return;
       const b = o.getBoundingRect();
@@ -722,14 +721,15 @@ function enableSmartGuides(c) {
       targetsY.push(b.top, b.top + b.height / 2, b.top + b.height);
     });
 
-    // Điểm của object đang kéo
+    // Các điểm cần check của object (Trái, Giữa, Phải / Trên, Giữa, Dưới)
     const objXPoints = [objBox.left, objBox.left + objBox.width / 2, objBox.left + objBox.width];
     const objYPoints = [objBox.top, objBox.top + objBox.height / 2, objBox.top + objBox.height];
 
-    let bestSnapX = { dist: snapThreshold, target: null, objPoint: null };
-    let bestSnapY = { dist: snapThreshold, target: null, objPoint: null };
+    // Chia threshold cho zoom để cảm giác hít luôn chuẩn 8px trên màn hình
+    let bestSnapX = { dist: snapThreshold / zoom, target: null, objPoint: null };
+    let bestSnapY = { dist: snapThreshold / zoom, target: null, objPoint: null };
 
-    // Quét tìm mốc X gần nhất
+    // Quét trục X
     for (let i = 0; i < objXPoints.length; i++) {
       for (let j = 0; j < targetsX.length; j++) {
         const dist = Math.abs(objXPoints[i] - targetsX[j]);
@@ -739,7 +739,7 @@ function enableSmartGuides(c) {
       }
     }
 
-    // Quét tìm mốc Y gần nhất
+    // Quét trục Y
     for (let i = 0; i < objYPoints.length; i++) {
       for (let j = 0; j < targetsY.length; j++) {
         const dist = Math.abs(objYPoints[i] - targetsY[j]);
@@ -751,16 +751,14 @@ function enableSmartGuides(c) {
 
     // Áp dụng hít trục X (Dọc)
     if (bestSnapX.target !== null) {
-      const delta = bestSnapX.target - bestSnapX.objPoint;
-      // Chia delta cho zoom để đưa về đúng khoảng cách của object gốc
-      obj.left += delta / zoom; 
+      obj.left += (bestSnapX.target - bestSnapX.objPoint);
+      // Lưu tọa độ GỐC, lúc vẽ mới nhân zoom
       lines.push({ x1: bestSnapX.target, y1: 0, x2: bestSnapX.target, y2: canvasH, type: 'v' });
     }
 
     // Áp dụng hít trục Y (Ngang)
     if (bestSnapY.target !== null) {
-      const delta = bestSnapY.target - bestSnapY.objPoint;
-      obj.top += delta / zoom;
+      obj.top += (bestSnapY.target - bestSnapY.objPoint);
       lines.push({ x1: 0, y1: bestSnapY.target, x2: canvasW, y2: bestSnapY.target, type: 'h' });
     }
 
@@ -778,15 +776,19 @@ function enableSmartGuides(c) {
   c.on('after:render', function() {
     if (lines.length > 0) {
       ctx.save();
+      const zoom = c.getZoom();
+      
       lines.forEach(line => {
         ctx.beginPath();
-        // Vẽ đường kẻ dựa trên tọa độ màn hình (đã tính sẵn ở trên)
         if (line.type === 'v') {
-          ctx.moveTo(line.x1, 0);
-          ctx.lineTo(line.x2, c.getHeight());
+          // Nhân tọa độ gốc với zoom để vẽ đúng vị trí màn hình
+          const x = line.x1 * zoom; 
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, c.getHeight());
         } else {
-          ctx.moveTo(0, line.y1);
-          ctx.lineTo(c.getWidth(), line.y2);
+          const y = line.y1 * zoom;
+          ctx.moveTo(0, y);
+          ctx.lineTo(c.getWidth(), y);
         }
         ctx.strokeStyle = '#a855f7'; 
         ctx.lineWidth = 1.5; 
@@ -797,6 +799,7 @@ function enableSmartGuides(c) {
     }
   });
 }
+
 
 
  
