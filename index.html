@@ -6,7 +6,8 @@
 <title>Netizen Editor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Poppins:wght@400;700&family=Playfair+Display:wght@400;700&family=Oswald:wght@400;700&family=Bebas+Neue&family=Dancing+Script:wght@400;700&family=Lobster&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Poppins:wght@400;700&family=Be+Vietnam+Pro:wght@400;600;700&family=Nunito:wght@400;700&family=Raleway:wght@400;700&family=Playfair+Display:wght@400;700&family=Oswald:wght@400;700&family=Bebas+Neue&family=Dancing+Script:wght@400;700&family=Lobster&display=swap" rel="stylesheet">
+<!-- Thư viện Fabric.js quan trọng bắt buộc phải có -->
 <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -128,7 +129,7 @@
 
   .canvas-area { flex: 1; background: #e5e7eb; display: flex; overflow: hidden; }
   #canvas-scroll { flex: 1; overflow: auto; display: flex; background: #e5e7eb; }
-  #canvas-inner { margin: auto; padding: 40px; } /* Dùng margin auto để căn giữa chuẩn xác */
+  #canvas-inner { margin: auto; padding: 40px; }
   #canvas-wrap { box-shadow: 0 4px 18px rgba(0,0,0,.12); background: #fff; }
   #c { display: block; }
 
@@ -271,6 +272,8 @@
       <button data-tool="triangle" title="Tam giác">△</button>
       <button data-tool="star" title="Ngôi sao">☆</button>
       <button data-tool="line" title="Đường kẻ">╱</button>
+      <!-- NÚT THANH TRẠNG THÁI -->
+      <button data-tool="statusbar" title="Thanh trạng thái (Sóng, Wifi, Pin)">📱</button>
     </aside>
     <section class="canvas-area">
       <div id="canvas-scroll">
@@ -302,17 +305,31 @@
             <div class="field">
               <label>Phông chữ</label>
               <select id="font-family">
-                <option value="Inter">Inter</option>
-                <option value="Roboto">Roboto</option>
-                <option value="Open Sans">Open Sans</option>
-                <option value="Lato">Lato</option>
-                <option value="Montserrat">Montserrat</option>
-                <option value="Poppins">Poppins</option>
-                <option value="Playfair Display">Playfair Display</option>
-                <option value="Oswald">Oswald</option>
-                <option value="Bebas Neue">Bebas Neue</option>
-                <option value="Dancing Script">Dancing Script</option>
-                <option value="Lobster">Lobster</option>
+                <optgroup label="Sans-Serif (Không chân)">
+                  <option value="Inter">Inter</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Open Sans">Open Sans</option>
+                  <option value="Lato">Lato</option>
+                  <option value="Montserrat">Montserrat</option>
+                  <option value="Poppins">Poppins</option>
+                  <option value="Be Vietnam Pro">Be Vietnam Pro</option>
+                  <option value="Nunito">Nunito</option>
+                  <option value="Raleway">Raleway</option>
+                  <option value="Oswald">Oswald</option>
+                  <option value="Bebas Neue">Bebas Neue</option>
+                  <option value="Arial">Arial (Hệ thống)</option>
+                  <option value="Helvetica">Helvetica (Hệ thống)</option>
+                  <option value="sans-serif">Sans-serif (Mặc định)</option>
+                </optgroup>
+                <optgroup label="Serif (Có chân)">
+                  <option value="Playfair Display">Playfair Display</option>
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="serif">Serif (Mặc định)</option>
+                </optgroup>
+                <optgroup label="Script (Viết tay)">
+                  <option value="Dancing Script">Dancing Script</option>
+                  <option value="Lobster">Lobster</option>
+                </optgroup>
               </select>
             </div>
             <div class="field">
@@ -374,7 +391,7 @@
 
 <script>
 /* ============================================================
-   ⚠️ THAY 2 DÒNG DƯỚI BẰNG THÔNG TIN SUPABASE CỦA BẠN
+   THAY THÔNG TIN SUPABASE CỦA BẠN
    ============================================================ */
 const SUPABASE_URL = 'https://hltrwkihjihjfkweinqo.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_TQCg1LvbYL4A5OhVC3krGw_zDoaayCJ';
@@ -654,11 +671,8 @@ function initCanvas(project) {
     selection: true
   });
 
-  // ==========================================
-  // BẬT CĂN LỀ THÔNG MINH TỰ VIẾT (KHÔNG CẦN THƯ VIỆN NGOÀI)
-  // ==========================================
+  // BẬT CĂN LỀ THÔNG MINH
   enableSmartGuides(canvas);
-  // ==========================================
 
   history = []; historyIndex = -1;
   isRestoring = true;
@@ -688,11 +702,10 @@ function initCanvas(project) {
 }
 
 // Hàm vẽ đường căn lề tự động
-
 function enableSmartGuides(c) {
   const ctx = c.contextTop;
   let lines = [];
-  const snapThreshold = 8; // Khoảng cách hít (pixel màn hình)
+  const snapThreshold = 8;
 
   c.on('object:moving', function(e) {
     const obj = e.target;
@@ -702,18 +715,14 @@ function enableSmartGuides(c) {
     lines = [];
 
     const zoom = c.getZoom();
-    // Lấy kích thước GỐC của Canvas (không bị ảnh hưởng bởi zoom)
     const canvasW = currentProject ? currentProject.width : c.width / zoom;
     const canvasH = currentProject ? currentProject.height : c.height / zoom;
 
-    // Lấy tọa độ GỐC của object đang kéo
     const objBox = obj.getBoundingRect();
     
-    // Các mốc căn lề GỐC của canvas
     let targetsX = [0, canvasW / 2, canvasW];
     let targetsY = [0, canvasH / 2, canvasH];
 
-    // Các mốc căn lề GỐC của object khác
     c.getObjects().forEach(o => {
       if (o === obj || o.type === 'activeSelection') return;
       const b = o.getBoundingRect();
@@ -721,50 +730,37 @@ function enableSmartGuides(c) {
       targetsY.push(b.top, b.top + b.height / 2, b.top + b.height);
     });
 
-    // Các điểm cần check của object (Trái, Giữa, Phải / Trên, Giữa, Dưới)
     const objXPoints = [objBox.left, objBox.left + objBox.width / 2, objBox.left + objBox.width];
     const objYPoints = [objBox.top, objBox.top + objBox.height / 2, objBox.top + objBox.height];
 
-    // Chia threshold cho zoom để cảm giác hít luôn chuẩn 8px trên màn hình
     let bestSnapX = { dist: snapThreshold / zoom, target: null, objPoint: null };
     let bestSnapY = { dist: snapThreshold / zoom, target: null, objPoint: null };
 
-    // Quét trục X
     for (let i = 0; i < objXPoints.length; i++) {
       for (let j = 0; j < targetsX.length; j++) {
         const dist = Math.abs(objXPoints[i] - targetsX[j]);
-        if (dist < bestSnapX.dist) {
-          bestSnapX = { dist, target: targetsX[j], objPoint: objXPoints[i] };
-        }
+        if (dist < bestSnapX.dist) bestSnapX = { dist, target: targetsX[j], objPoint: objXPoints[i] };
       }
     }
 
-    // Quét trục Y
     for (let i = 0; i < objYPoints.length; i++) {
       for (let j = 0; j < targetsY.length; j++) {
         const dist = Math.abs(objYPoints[i] - targetsY[j]);
-        if (dist < bestSnapY.dist) {
-          bestSnapY = { dist, target: targetsY[j], objPoint: objYPoints[i] };
-        }
+        if (dist < bestSnapY.dist) bestSnapY = { dist, target: targetsY[j], objPoint: objYPoints[i] };
       }
     }
 
-    // Áp dụng hít trục X (Dọc)
     if (bestSnapX.target !== null) {
       obj.left += (bestSnapX.target - bestSnapX.objPoint);
-      // Lưu tọa độ GỐC, lúc vẽ mới nhân zoom
       lines.push({ x1: bestSnapX.target, y1: 0, x2: bestSnapX.target, y2: canvasH, type: 'v' });
     }
 
-    // Áp dụng hít trục Y (Ngang)
     if (bestSnapY.target !== null) {
       obj.top += (bestSnapY.target - bestSnapY.objPoint);
       lines.push({ x1: 0, y1: bestSnapY.target, x2: canvasW, y2: bestSnapY.target, type: 'h' });
     }
 
-    if (bestSnapX.target !== null || bestSnapY.target !== null) {
-      obj.setCoords();
-    }
+    if (bestSnapX.target !== null || bestSnapY.target !== null) obj.setCoords();
   });
 
   c.on('mouse:up', function() {
@@ -777,11 +773,9 @@ function enableSmartGuides(c) {
     if (lines.length > 0) {
       ctx.save();
       const zoom = c.getZoom();
-      
       lines.forEach(line => {
         ctx.beginPath();
         if (line.type === 'v') {
-          // Nhân tọa độ gốc với zoom để vẽ đúng vị trí màn hình
           const x = line.x1 * zoom; 
           ctx.moveTo(x, 0);
           ctx.lineTo(x, c.getHeight());
@@ -800,9 +794,6 @@ function enableSmartGuides(c) {
   });
 }
 
-
-
- 
 /* ============================================================
    HISTORY
 ============================================================ */
@@ -888,7 +879,6 @@ function applyZoom(z) {
   currentZoom = Math.max(0.05, Math.min(4, z));
   canvas.setZoom(currentZoom);
   
-  // Cập nhật lại kích thước thật của canvas và wrapper
   canvas.setDimensions({
     width: currentProject.width * currentZoom,
     height: currentProject.height * currentZoom
@@ -920,8 +910,8 @@ function addText() {
     originX: 'center', originY: 'center',
     fontSize: 40, fontFamily: 'Inter', fill: '#1f2937',
     width: 400, textAlign: 'center',
-    splitByGrapheme: true,  // Sửa lỗi xuống dòng của tiếng Việt
-    objectCaching: false    // Tắt cache để chữ không bị tàng hình
+    splitByGrapheme: true,
+    objectCaching: false
   });
   canvas.add(t); 
   canvas.setActiveObject(t); 
@@ -950,11 +940,62 @@ function addShape(type) {
   if (shape) { canvas.add(shape); canvas.setActiveObject(shape); canvas.renderAll(); }
 }
 
+// HÀM TẠO THANH TRẠNG THÁI
+function addStatusBar() {
+  const scale = 2; // Tăng scale để nhìn rõ hơn trên canvas lớn
+  
+  // 1. Sóng di động
+  const s1 = new fabric.Rect({ width: 4*scale, height: 8*scale, fill: '#333', rx: 1, ry: 1, left: 0, top: 12*scale });
+  const s2 = new fabric.Rect({ width: 4*scale, height: 12*scale, fill: '#333', rx: 1, ry: 1, left: 6*scale, top: 8*scale });
+  const s3 = new fabric.Rect({ width: 4*scale, height: 16*scale, fill: '#333', rx: 1, ry: 1, left: 12*scale, top: 4*scale });
+  const s4 = new fabric.Rect({ width: 4*scale, height: 20*scale, fill: '#333', rx: 1, ry: 1, left: 18*scale, top: 0 });
+  const signalGroup = new fabric.Group([s1, s2, s3, s4], { left: 0, top: 0 });
+
+  // 2. Wifi (Dùng path chuẩn)
+  const wifiPath = "M12 21a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm-2.8-7.2c1.6-1.2 4-1.2 5.6 0l1.6-1.6a8 8 0 0 0-8.8 0l1.6 1.6zm-3.2-3.2c3.2-2.4 8-2.4 11.2 0l1.6-1.6a12 12 0 0 0-14.4 0l1.6 1.6z";
+  const wifiObj = new fabric.Path(wifiPath, { fill: '#333', left: 35*scale, top: 2*scale, scaleX: scale*0.7, scaleY: scale*0.7 });
+
+  // 3. Pin
+  const batBody = new fabric.Rect({ width: 24*scale, height: 12*scale, fill: 'transparent', stroke: '#333', strokeWidth: 2*scale, rx: 3*scale, ry: 3*scale, left: 75*scale, top: 4*scale });
+  const batTip = new fabric.Rect({ width: 2*scale, height: 4*scale, fill: '#333', rx: 1, ry: 1, left: 100*scale, top: 8*scale });
+  // Cột năng lượng (chỉnh độ rộng width này để thay đổi mức pin)
+  const batLevel = new fabric.Rect({ width: 16*scale, height: 6*scale, fill: '#333', rx: 1, ry: 1, left: 78*scale, top: 7*scale }); 
+  
+  // 4. Chữ số % Pin
+  const batText = new fabric.Textbox('7', { fontSize: 12*scale, fontFamily: 'Inter', fill: '#333', left: 83*scale, top: 5*scale, width: 20*scale, textAlign: 'center', fontWeight: 'bold' });
+
+  // Gom tất cả lại thành 1 khối
+  const statusGroup = new fabric.Group([signalGroup, wifiObj, batBody, batTip, batLevel, batText], {
+    left: canvas.getWidth() / 2,
+    top: canvas.getHeight() / 2,
+    originX: 'center',
+    originY: 'center',
+    name: 'Thanh trạng thái'
+  });
+  
+  canvas.add(statusGroup);
+  canvas.setActiveObject(statusGroup);
+  canvas.renderAll();
+}
+
+// Hàm tách nhóm để chỉnh sửa từng phần
+function ungroupSelected() {
+  const activeObject = canvas.getActiveObject();
+  if (!activeObject || activeObject.type !== 'group') return;
+  
+  activeObject.toActiveSelection();
+  canvas.requestRenderAll();
+  saveHistory();
+  markUnsaved();
+  toast('Đã tách nhóm, giờ bạn có thể sửa từng phần', 'success');
+}
+
 document.querySelectorAll('.left-tools button').forEach(b => {
   b.addEventListener('click', () => {
     const t = b.dataset.tool;
     if (t === 'text') addText();
     else if (t === 'image') $('file-image').click();
+    else if (t === 'statusbar') addStatusBar();
     else addShape(t);
   });
 });
@@ -1176,6 +1217,7 @@ function refreshLayers() {
     else if (obj.type === 'triangle') label = 'Tam giác';
     else if (obj.type === 'line') label = 'Đường kẻ';
     else if (obj.type === 'polygon') label = 'Đa giác';
+    else if (obj.type === 'group') label = obj.name || 'Nhóm';
 
     div.innerHTML = `<span class="layer-label">${escapeHtml(label)}</span>
       <button class="layer-del" title="Xóa">✕</button>`;
@@ -1211,12 +1253,26 @@ $('download-menu').querySelectorAll('button').forEach(b => {
 function downloadImage(format, quality, scale) {
   if (!canvas || !currentProject) return;
   try {
-    // Xuất ảnh dựa trên độ phân giải gốc (1080x1920) thay vì dựa vào mức zoom màn hình
+    // Đưa canvas về kích thước gốc 100% để chụp chuẩn xác
+    const oldZoom = canvas.getZoom();
+    const oldWidth = canvas.getWidth();
+    const oldHeight = canvas.getHeight();
+
+    canvas.setZoom(1);
+    canvas.setDimensions({ width: currentProject.width, height: currentProject.height });
+    canvas.renderAll();
+
     const dataURL = canvas.toDataURL({
       format: format === 'jpeg' ? 'jpeg' : 'png',
       quality: parseFloat(quality) || 1,
       multiplier: scale 
     });
+
+    // Trả lại trạng thái zoom cũ
+    canvas.setZoom(oldZoom);
+    canvas.setDimensions({ width: oldWidth, height: oldHeight });
+    canvas.renderAll();
+
     const a = document.createElement('a');
     a.download = `${sanitizeFilename(currentProject.name)}.${format}`;
     a.href = dataURL;
@@ -1226,6 +1282,7 @@ function downloadImage(format, quality, scale) {
     toast('Lỗi xuất ảnh: ' + err.message, 'error');
   }
 }
+
 /* ============================================================
    KEYBOARD SHORTCUTS
 ============================================================ */
@@ -1254,6 +1311,9 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault(); $('btn-duplicate').click();
   } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
     e.preventDefault(); saveCurrentProject(false);
+  } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'g') {
+    e.preventDefault(); 
+    ungroupSelected();
   }
 });
 
