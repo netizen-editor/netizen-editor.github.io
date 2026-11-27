@@ -130,7 +130,7 @@
   #canvas-scroll { flex: 1; overflow: auto; }
   #canvas-inner { min-width: 100%; min-height: 100%; display: flex;
     align-items: center; justify-content: center; padding: 24px; }
-  #canvas-wrap { box-shadow: 0 4px 18px rgba(0,0,0,.12); background: #fff; }
+  #canvas-wrap { box-shadow: 0 4px 18px rgba(0,0,0,.12); background: #fff;  display: inline-block; }
   #c { display: block; }
 
   .right-panel { width: 300px; background: #fff; border-left: 1px solid #e5e7eb;
@@ -769,7 +769,7 @@ function applyZoom(z) {
   canvas.setDimensions({
     width: currentProject.width * currentZoom,
     height: currentProject.height * currentZoom
-  });
+  }, { cssOnly: true }); // <--- QUAN TRỌNG: Chỉ đổi kích thước CSS, giữ nguyên độ phân giải gốc
   canvas.renderAll();
   $('zoom-label').textContent = Math.round(currentZoom * 100) + '%';
 }
@@ -1083,11 +1083,11 @@ $('download-menu').querySelectorAll('button').forEach(b => {
 function downloadImage(format, quality, scale) {
   if (!canvas || !currentProject) return;
   try {
-    const multiplier = scale / currentZoom;
+    // Xuất ảnh dựa trên độ phân giải gốc (1080x1920) thay vì dựa vào mức zoom màn hình
     const dataURL = canvas.toDataURL({
       format: format === 'jpeg' ? 'jpeg' : 'png',
       quality: parseFloat(quality) || 1,
-      multiplier: Math.max(0.1, multiplier)
+      multiplier: scale 
     });
     const a = document.createElement('a');
     a.download = `${sanitizeFilename(currentProject.name)}.${format}`;
@@ -1098,7 +1098,6 @@ function downloadImage(format, quality, scale) {
     toast('Lỗi xuất ảnh: ' + err.message, 'error');
   }
 }
-
 /* ============================================================
    KEYBOARD SHORTCUTS
 ============================================================ */
