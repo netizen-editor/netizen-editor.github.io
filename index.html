@@ -9,8 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Poppins:wght@400;700&family=Playfair+Display:wght@400;700&family=Oswald:wght@400;700&family=Bebas+Neue&family=Dancing+Script:wght@400;700&family=Lobster&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
- <!-- Thêm dòng này để có tính năng căn lề thông minh -->
-<script src="https://unpkg.com/fabricjs-smart-guides@1.0.1/dist/fabricjs-smart-guides.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Inter', sans-serif; background: #f8f9fa; color: #1f2937; height: 100vh; overflow: hidden; }
@@ -658,16 +656,11 @@ function initCanvas(project) {
   });
 
   // ==========================================
-  // THÊM ĐOẠN NÀY ĐỂ BẬT CĂN LỀ THÔNG MINH
+  // BẬT CĂN LỀ THÔNG MINH TỰ VIẾT (KHÔNG CẦN THƯ VIỆN NGOÀI)
   // ==========================================
-  if (window.fabric && window.fabric.SmartGuides) {
-    new fabric.SmartGuides(canvas, {
-      color: '#a855f7', // Màu đường kẻ (màu tím giống Canva)
-      width: 1.5,       // Độ dày đường kẻ
-      snapDistance: 8   // Khoảng cách hít (px)
-    });
-  }
+  enableSmartGuides(canvas);
   // ==========================================
+
   history = []; historyIndex = -1;
   isRestoring = true;
 
@@ -695,7 +688,98 @@ function initCanvas(project) {
   canvas.on('selection:cleared', () => { updateObjectPanel(); refreshLayers(); });
 }
 
-/* ============================================================
+// Hàm vẽ đường căn lề tự động
+function enableSmartGuides(c) {
+  const ctx = c.contextTop;
+  let lines = [];
+  const snapDistance = 8; // Khoảng cách hít (px)
+
+  c.on('object:moving', function(e) {
+    const obj = e.target;
+    if (!obj) return;
+    
+    c.clearContext(c.contextTop);
+    lines = [];
+
+    const objBox = obj.getBoundingRect(true);
+    const objCenter = { x: objBox.left + objBox.width / 2, y: objBox.top + objBox.height / 2 };
+
+    const canvasW = c.getWidth();
+    const canvasH = c.getHeight();
+
+    const targetsX = [
+      { x: 0 }, { x: canvasW / 2 }, { x: canvasW }
+    ];
+    const targetsY = [
+      { y: 0 }, { y: canvasH / 2 }, { y: canvasH }
+    ];
+
+    c.getObjects().forEach(o => {
+      if (o === obj) return;
+      const b = o.getBoundingRect(true);
+      targetsX.push({ x: b.left }, { x: b.left + b.width / 2 }, { x: b.left + b.width });
+      targetsY.push({ y: b.top }, { y: b.top + b.height / 2 }, { y: b.top + b.height });
+    });
+
+    const objXPoints = [
+      { x: objBox.left }, { x: objCenter.x }, { x: objBox.left + objBox.width }
+    ];
+    const objYPoints = [
+      { y: objBox.top }, { y: objCenter.y }, { y: objBox.top + objBox.height }
+    ];
+
+    let snappedX = false;
+    for (let i = 0; i < objXPoints.length; i++) {
+      for (let j = 0; j < targetsX.length; j++) {
+        if (Math.abs(objXPoints[i].x - targetsX[j].x) < snapDistance) {
+          obj.set({ left: obj.left + (targetsX[j].x - objXPoints[i].x) });
+          obj.setCoords();
+          lines.push({ x1: targetsX[j].x, y1: 0, x2: targetsX[j].x, y2: canvasH });
+          snappedX = true;
+          break;
+        }
+      }
+      if (snappedX) break;
+    }
+
+    let snappedY = false;
+    for (let i = 0; i < objYPoints.length; i++) {
+      for (let j = 0; j < targetsY.length; j++) {
+        if (Math.abs(objYPoints[i].y - targetsY[j].y) < snapDistance) {
+          obj.set({ top: obj.top + (targetsY[j].y - objYPoints[i].y) });
+          obj.setCoords();
+          lines.push({ x1: 0, y1: targetsY[j].y, x2: canvasW, y2: targetsY[j].y });
+          snappedY = true;
+          break;
+        }
+      }
+      if (snappedY) break;
+    }
+  });
+
+  c.on('mouse:up', function() {
+    lines = [];
+    c.clearContext(c.contextTop);
+    c.requestRenderAll();
+  });
+
+  c.on('after:render', function() {
+    if (lines.length > 0) {
+      ctx.save();
+      lines.forEach(line => {
+        ctx.beginPath();
+        ctx.moveTo(line.x1, line.y1);
+        ctx.lineTo(line.x2, line.y2);
+        ctx.strokeStyle = '#a855f7'; // Màu tím giống Canva
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([5, 5]); // Nét đứt cho giống Canva
+        ctx.stroke();
+      });
+      ctx.restore();
+    }
+  });
+}
+ /* ============================================================
    HISTORY
 ============================================================ */
 function saveHistory() {
