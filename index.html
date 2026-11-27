@@ -778,21 +778,34 @@ $('project-name-input').addEventListener('input', () => markUnsaved());
 function applyZoom(z) {
   if (!canvas || !currentProject) return;
   currentZoom = Math.max(0.05, Math.min(4, z));
+  
   canvas.setZoom(currentZoom);
+  // Tính toán lại kích thước thực tế của canvas
   canvas.setDimensions({
     width: currentProject.width * currentZoom,
     height: currentProject.height * currentZoom
-  }, { cssOnly: true }); // <--- QUAN TRỌNG: Chỉ đổi kích thước CSS, giữ nguyên độ phân giải gốc
+  });
+  
+  // Cập nhật lại kích thước thẻ bao ngoài để thanh cuộn hoạt động đúng
+  const wrap = document.getElementById('canvas-wrap');
+  wrap.style.width = (currentProject.width * currentZoom) + 'px';
+  wrap.style.height = (currentProject.height * currentZoom) + 'px';
+  
   canvas.renderAll();
   $('zoom-label').textContent = Math.round(currentZoom * 100) + '%';
 }
+
 function fitToScreen() {
   if (!canvas || !currentProject) return;
   const scroll = $('canvas-scroll');
-  const aw = scroll.clientWidth - 60;
-  const ah = scroll.clientHeight - 60;
+  // Trừ hao 80px cho padding
+  const aw = scroll.clientWidth - 80; 
+  const ah = scroll.clientHeight - 80;
   if (aw <= 0 || ah <= 0) return;
-  applyZoom(Math.min(aw / currentProject.width, ah / currentProject.height, 1));
+  
+  // Tính tỷ lệ để vừa màn hình (không giới hạn max là 1 để màn hình to vẫn phóng to được)
+  const scale = Math.min(aw / currentProject.width, ah / currentProject.height);
+  applyZoom(scale);
 }
 $('btn-zoom-in').addEventListener('click', () => applyZoom(currentZoom * 1.15));
 $('btn-zoom-out').addEventListener('click', () => applyZoom(currentZoom / 1.15));
@@ -888,16 +901,24 @@ function addImageToCanvas(url) {
   return new Promise((resolve, reject) => {
     fabric.Image.fromURL(url, (img) => {
       if (!img.width || !img.height) { reject(new Error('Ảnh không hợp lệ')); return; }
-      const maxW = canvas.getWidth() * 0.6;
-      const maxH = canvas.getHeight() * 0.6;
+      
+      // Giới hạn ảnh chỉ chiếm tối đa 70% khung tranh để không bị tràn
+      const maxW = currentProject.width * 0.7;
+      const maxH = currentProject.height * 0.7;
       const s = Math.min(maxW / img.width, maxH / img.height, 1);
+      
       img.set({
-        scaleX: s, scaleY: s,
-        left: canvas.getWidth() / 2, top: canvas.getHeight() / 2,
-        originX: 'center', originY: 'center'
+        scaleX: s, 
+        scaleY: s,
+        // Đặt ảnh vào chính giữa tâm Canvas (1080/2 và 1920/2)
+        left: currentProject.width / 2, 
+        top: currentProject.height / 2,
+        originX: 'center', 
+        originY: 'center'
       });
-      canvas.add(img);
-      canvas.setActiveObject(img);
+      
+      canvas.add(img); 
+      canvas.setActiveObject(img); 
       canvas.renderAll();
       resolve();
     }, { crossOrigin: 'anonymous' });
