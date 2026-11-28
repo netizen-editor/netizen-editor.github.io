@@ -3,278 +3,321 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Netizen Editor - Professional Design</title>
+<title>Netizen Editor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!-- Thêm thư viện Icon FontAwesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
+  /* =========================================
+     HỆ THỐNG MÀU SẮC (Hỗ trợ Light/Dark Mode)
+     ========================================= */
   :root {
-    --bg-body: #f9fafb;
+    --bg-body: #f3f4f6;
     --bg-panel: #ffffff;
-    --text-main: #1f2937;
+    --text-main: #111827;
     --text-muted: #6b7280;
     --border-color: #e5e7eb;
     --primary: #8b5cf6; /* Tím Canva */
     --primary-hover: #7c3aed;
     --danger: #ef4444;
     --success: #10b981;
-    --canvas-bg: #f3f4f6;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-    --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
-    --radius-md: 12px;
-    --radius-lg: 20px;
+    --canvas-bg: #e5e7eb;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg-body: #0f172a;
+      --bg-panel: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --canvas-bg: #020617;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+    }
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); height: 100vh; height: 100dvh; overflow: hidden; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); height: 100vh; height: 100dvh; overflow: hidden; transition: background 0.3s, color 0.3s; }
   button { cursor: pointer; font-family: inherit; border: none; background: none; touch-action: manipulation; transition: all 0.2s; }
-  input, select { font-family: inherit; touch-action: manipulation; color: var(--text-main); }
+  input, select { font-family: inherit; touch-action: manipulation; color: var(--text-main); background: var(--bg-panel); border: 1px solid var(--border-color); }
   .hidden { display: none !important; }
   .screen { height: 100vh; height: 100dvh; overflow: hidden; }
 
-  /* Scrollbar Styles */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
-
-  /* ================= AUTH ================= */
+  /* Auth */
   #screen-loading, #screen-auth {
     display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, #a78bfa 0%, #3b82f6 100%); padding: 20px;
+    background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%); padding: 20px;
   }
-  #screen-loading { color: #fff; font-size: 18px; font-weight: 500; }
-  .auth-card { background: var(--bg-panel); padding: 32px; border-radius: var(--radius-lg); width: 400px; max-width: 100%; box-shadow: var(--shadow-lg); }
-  .auth-card h1 { font-size: 26px; color: var(--primary); margin-bottom: 8px; text-align: center; font-weight: 700; letter-spacing: -0.5px;}
+  #screen-loading { color: #fff; font-size: 18px; }
+  .auth-card { background: var(--bg-panel); padding: 32px; border-radius: 16px; width: 400px; max-width: 100%; box-shadow: var(--shadow-lg); }
+  .auth-card h1 { font-size: 24px; color: var(--primary); margin-bottom: 8px; text-align: center; font-weight: 700; }
   .auth-card .sub { color: var(--text-muted); font-size: 14px; text-align: center; margin-bottom: 24px; }
   .auth-card label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
-  .auth-card input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border-color); font-size: 14px; margin-bottom: 16px; outline: none; transition: border 0.2s;}
+  .auth-card input { width: 100%; padding: 12px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; outline: none; }
   .auth-card input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2); }
-  .auth-card button { width: 100%; padding: 14px; background: var(--primary); color: #fff; border-radius: 10px; font-weight: 600; font-size: 15px; }
+  .auth-card button { width: 100%; padding: 12px; background: var(--primary); color: #fff; border-radius: 8px; font-weight: 600; font-size: 15px; }
   .auth-card button:hover { background: var(--primary-hover); }
   #auth-msg { font-size: 13px; text-align: center; margin-top: 14px; min-height: 20px; color: var(--success); font-weight: 500; }
   #auth-msg.error { color: var(--danger); }
 
-  /* ================= DASHBOARD ================= */
-  #screen-dashboard { overflow-y: auto; background: var(--bg-body); padding-bottom: 70px; /* Chừa chỗ cho Bottom Nav */ }
+  /* Dashboard */
+  #screen-dashboard { overflow-y: auto; }
+  #screen-dashboard header { 
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+    padding: 16px 24px; background: var(--bg-panel); border-bottom: 1px solid var(--border-color); 
+    position: sticky; top: 0; z-index: 10; gap: 16px; box-shadow: var(--shadow-sm);
+  }
+  #screen-dashboard h1 { font-size: 20px; color: var(--primary); font-weight: 700; }
+  .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  #user-email { font-size: 13px; color: var(--text-muted); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: var(--bg-body); padding: 6px 12px; border-radius: 20px; }
+  #btn-logout { padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; color: var(--text-main); border: 1px solid var(--border-color); background: var(--bg-panel); }
+  #btn-logout:hover { background: var(--bg-body); }
+  #btn-new-project { background: var(--primary); color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; white-space: nowrap; box-shadow: var(--shadow-sm); }
+  #btn-new-project:hover { background: var(--primary-hover); transform: translateY(-1px); }
   
-  .dash-header { 
-    background: linear-gradient(135deg, #e0e7ff 0%, #f3e8ff 100%);
-    padding: 30px 24px 40px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;
-    position: relative;
-  }
-  .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-  .logo { font-size: 22px; font-weight: 700; color: #4c1d95; display: flex; align-items: center; gap: 8px; }
-  .logo i { color: #8b5cf6; }
-  .user-profile { display: flex; align-items: center; gap: 12px; }
-  #user-email { font-size: 13px; color: #4c1d95; font-weight: 500; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .btn-icon { width: 36px; height: 36px; border-radius: 50%; background: #fff; color: #4c1d95; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow-sm); }
-  
-  .search-bar { 
-    background: #fff; border-radius: 30px; padding: 12px 20px; display: flex; align-items: center; gap: 12px;
-    box-shadow: var(--shadow-md); margin-top: -20px; margin-left: 24px; margin-right: 24px; position: relative; z-index: 2;
-  }
-  .search-bar i { color: #9ca3af; font-size: 16px; }
-  .search-bar input { border: none; background: transparent; width: 100%; font-size: 15px; outline: none; }
-
-  .dash-content { padding: 24px; }
-  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
-  .section-title span { font-size: 14px; color: var(--primary); font-weight: 500; cursor: pointer; }
-
-  .btn-create-main { 
-    background: var(--primary); color: #fff; padding: 16px; border-radius: var(--radius-md); 
-    font-size: 16px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;
-    width: 100%; box-shadow: var(--shadow-md); margin-bottom: 24px;
-  }
-  .btn-create-main:hover { background: var(--primary-hover); transform: translateY(-2px); }
-
-  #project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
-  @media (min-width: 768px) { #project-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; } }
-  
-  .project-card { 
-    background: #fff; border-radius: var(--radius-md); overflow: hidden; cursor: pointer; 
-    box-shadow: var(--shadow-sm); position: relative; aspect-ratio: 3/4; display: flex; flex-direction: column;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .project-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
-  .project-card .thumb { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 700; color: rgba(255,255,255,0.9); background: #e5e7eb; }
-  .project-card .info { padding: 12px; background: #fff; border-top: 1px solid var(--border-color); }
-  .project-card .name { font-weight: 600; font-size: 14px; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .project-card .meta { color: var(--text-muted); font-size: 11px; }
-  .project-card .delete-btn { position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.9); color: var(--danger); display: flex; align-items: center; justify-content: center; opacity: 0; box-shadow: var(--shadow-sm); }
+  #dashboard-main { padding: 24px; max-width: 1400px; margin: 0 auto; }
+  #project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+  .project-card { background: var(--bg-panel); border-radius: 12px; overflow: hidden; cursor: pointer; border: 1px solid var(--border-color); transition: all 0.2s; position: relative; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; }
+  .project-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--primary); }
+  .project-card .thumb { aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: rgba(255,255,255,0.9); background: var(--bg-body); }
+  .project-card .info { padding: 16px; flex: 1; }
+  .project-card .name { font-weight: 600; font-size: 15px; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .project-card .meta { color: var(--text-muted); font-size: 13px; }
+  .project-card .delete-btn { position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; border-radius: 50%; background: rgba(0,0,0,0.5); color: #fff; font-weight: bold; opacity: 0; transition: opacity 0.2s; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
   .project-card:hover .delete-btn { opacity: 1; }
+  .project-card .delete-btn:hover { background: var(--danger); transform: scale(1.1); }
   
-  #empty-state { color: var(--text-muted); text-align: center; padding: 40px 0; font-size: 15px; }
-  
-  /* Bottom Navigation */
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: #fff;
-    border-top: 1px solid var(--border-color); display: flex; justify-content: space-around; align-items: center;
-    z-index: 100; padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-  @media (min-width: 768px) { .bottom-nav { display: none; } }
-  .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; color: #9ca3af; font-size: 10px; font-weight: 500; }
-  .nav-item i { font-size: 20px; }
-  .nav-item.active { color: var(--primary); }
+  #empty-state { color: var(--text-muted); text-align: center; padding: 80px 0; font-size: 15px; }
+  #loading-state { color: var(--text-muted); text-align: center; padding: 60px 0; font-size: 15px; }
 
-  /* ================= MODAL ================= */
-  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; backdrop-filter: blur(4px); }
-  .modal-content { background: var(--bg-panel); border-radius: var(--radius-lg); padding: 24px; width: 600px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
-  .modal-content h2 { margin-bottom: 20px; font-size: 20px; font-weight: 700; }
+  /* Modal */
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px; backdrop-filter: blur(2px); }
+  .modal-content { background: var(--bg-panel); border-radius: 16px; padding: 28px; width: 640px; max-width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+  .modal-content h2 { margin-bottom: 20px; font-size: 22px; font-weight: 700; }
   .modal-content label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin: 16px 0 8px; }
-  .modal-content input[type=text], .modal-content input[type=number] { width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; outline: none; }
+  .modal-content input[type=text], .modal-content input[type=number] { width: 100%; padding: 10px 14px; border-radius: 8px; font-size: 14px; outline: none; }
+  .modal-content input:focus { border-color: var(--primary); }
   .size-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
   @media(max-width: 500px) { .size-grid { grid-template-columns: repeat(2, 1fr); } }
-  .size-btn { padding: 16px 8px; border: 2px solid var(--border-color); border-radius: 10px; background: #fff; text-align: center; font-size: 12px; font-weight: 500; color: var(--text-main); }
-  .size-btn.active { border-color: var(--primary); background: #f5f3ff; color: var(--primary); font-weight: 600; }
-  .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
-  .modal-actions button { padding: 12px 20px; border-radius: 8px; font-weight: 600; font-size: 15px; }
+  .size-btn { padding: 16px 8px; border: 2px solid var(--border-color); border-radius: 10px; background: var(--bg-panel); text-align: center; font-size: 13px; font-weight: 500; color: var(--text-main); transition: all 0.2s; }
+  .size-btn:hover { border-color: var(--primary); background: rgba(139, 92, 246, 0.05); }
+  .size-btn.active { border-color: var(--primary); background: rgba(139, 92, 246, 0.1); color: var(--primary); font-weight: 700; }
+  .size-btn .preview { background: linear-gradient(135deg, #cbd5e1, #94a3b8); border-radius: 6px; margin: 0 auto 10px; box-shadow: var(--shadow-sm); }
+  .size-btn .dim { color: var(--text-muted); font-size: 11px; margin-top: 4px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 28px; }
+  .modal-actions button { padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 15px; }
   #btn-cancel-new { background: var(--bg-body); color: var(--text-main); }
+  #btn-cancel-new:hover { background: var(--border-color); }
   #btn-create-new { background: var(--primary); color: #fff; }
+  #btn-create-new:hover { background: var(--primary-hover); }
+  .custom-size { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-  /* ================= WORKSPACE (EDITOR) ================= */
-  #screen-workspace { display: flex; flex-direction: column; background: var(--canvas-bg); height: 100vh; height: 100dvh; overflow: hidden; }
+  /* =========================================
+     WORKSPACE LAYOUT
+     ========================================= */
+  #screen-workspace { display: flex; flex-direction: column; background: var(--bg-body); height: 100vh; height: 100dvh; overflow: hidden; }
   
   .workspace-header { 
-    flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--border-color);
-    display: flex; align-items: center; justify-content: space-between; padding: 0 16px; gap: 12px; z-index: 20; min-height: 56px;
+    flex-shrink: 0; background: var(--bg-panel); border-bottom: 1px solid var(--border-color);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 16px; gap: 16px; z-index: 20; box-shadow: var(--shadow-sm); min-height: 56px;
   }
-  .header-left, .header-right { display: flex; align-items: center; gap: 8px; }
-  .header-center { display: flex; align-items: center; gap: 4px; }
+  .workspace-header .left, .workspace-header .center, .workspace-header .right { display: flex; align-items: center; gap: 8px; }
+  .workspace-header button { padding: 8px 12px; border-radius: 8px; color: var(--text-main); font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center; }
+  .workspace-header button:hover:not(:disabled) { background: var(--bg-body); }
+  .workspace-header button:disabled { opacity: 0.3; cursor: not-allowed; }
+  #project-name-input { padding: 8px 12px; border: 1px solid transparent; border-radius: 6px; font-weight: 600; font-size: 15px; background: transparent; width: 160px; color: var(--text-main); transition: all 0.2s; }
+  #project-name-input:hover, #project-name-input:focus { border-color: var(--border-color); background: var(--bg-body); outline: none; }
+  #save-status { font-size: 12px; color: var(--text-muted); font-weight: 500; display: none; }
+  .sep { color: var(--border-color); font-weight: 300; }
+  #zoom-label { min-width: 48px; text-align: center; font-size: 13px; font-weight: 600; color: var(--text-muted); }
   
-  .btn-header { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--text-main); font-size: 16px; }
-  .btn-header:hover { background: var(--bg-body); }
-  .btn-header:disabled { opacity: 0.3; }
-  
-  #project-name-input { padding: 6px 10px; border: 1px solid transparent; border-radius: 6px; font-weight: 600; font-size: 15px; background: transparent; width: 140px; color: var(--text-main); text-align: center; }
-  #project-name-input:focus { border-color: var(--border-color); background: var(--bg-body); outline: none; }
-  #save-status { font-size: 12px; color: var(--success); font-weight: 500; display: none; }
-
-  #btn-save { background: var(--primary); color: #fff; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 14px; }
+  #btn-save { background: var(--primary); color: #fff !important; padding: 8px 20px !important; font-weight: 600; box-shadow: var(--shadow-sm); border-radius: 20px; }
   #btn-save:hover { background: var(--primary-hover); }
   
   .dropdown { position: relative; }
-  .btn-download { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: #fff; color: var(--text-main); font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px; }
-  .dropdown-menu { position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--shadow-lg); min-width: 200px; z-index: 100; padding: 6px; }
-  .dropdown-menu button { display: block; width: 100%; text-align: left; padding: 10px 14px; font-size: 14px; border-radius: 8px; color: var(--text-main); font-weight: 500; }
+  #btn-download { border: 1px solid var(--border-color); background: var(--bg-panel); border-radius: 20px; padding: 8px 16px !important; }
+  .dropdown-menu { position: absolute; top: calc(100% + 4px); right: 0; background: var(--bg-panel);
+    border: 1px solid var(--border-color); border-radius: 12px; box-shadow: var(--shadow-lg);
+    min-width: 220px; z-index: 100; padding: 8px; }
+  .dropdown-menu button { display: flex; align-items: center; width: 100%; text-align: left; padding: 10px 14px;
+    font-size: 14px; border-radius: 8px; color: var(--text-main) !important; font-weight: 500; }
   .dropdown-menu button:hover { background: var(--bg-body); }
 
+  /* Vùng Main chia làm 3 cột (Tools - Canvas - Panel) */
   .workspace-main { flex: 1; display: flex; overflow: hidden; position: relative; width: 100%; }
   
-  /* Canvas Area */
+  /* Toolbars Desktop */
+  .left-tools { width: 72px; background: var(--bg-panel); border-right: 1px solid var(--border-color);
+    display: flex; flex-direction: column; align-items: center; padding: 16px 0; gap: 12px; z-index: 10; overflow-y: auto; flex-shrink: 0; }
+  .left-tools button { width: 52px; height: 52px; border-radius: 12px; font-size: 20px;
+    color: var(--text-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; gap: 4px;}
+  .left-tools button i { font-style: normal; font-size: 22px; }
+  .left-tools button span { font-size: 11px; font-weight: 500; }
+  .left-tools button:hover { background: rgba(139, 92, 246, 0.1); color: var(--primary); }
+  .left-tools button.active { background: var(--primary); color: #fff; }
+  
+  /* Vùng Canvas */
   .canvas-area { flex: 1; background: var(--canvas-bg); display: flex; overflow: hidden; position: relative; }
   #canvas-scroll { flex: 1; width: 100%; height: 100%; overflow: auto; display: flex; overscroll-behavior: contain; }
   #canvas-inner { margin: auto; padding: 40px; display: flex; align-items: center; justify-content: center; min-width: 100%; min-height: 100%; }
-  #canvas-wrap { box-shadow: 0 4px 20px rgba(0,0,0,0.1); background: #fff; border-radius: 4px; }
+  #canvas-wrap { box-shadow: 0 4px 20px rgba(0,0,0,0.15); background: #fff; border-radius: 2px; }
   #c { display: block; }
 
-  /* Toolbar Bottom (Mobile) / Left (Desktop) */
-  .left-tools { 
-    width: 72px; background: #fff; border-right: 1px solid var(--border-color);
-    display: flex; flex-direction: column; align-items: center; padding: 16px 0; gap: 8px; z-index: 10; overflow-y: auto; flex-shrink: 0; 
-  }
-  .tool-btn { width: 48px; height: 48px; border-radius: 12px; font-size: 20px; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
-  .tool-btn i { font-size: 20px; }
-  .tool-btn span { font-size: 10px; font-weight: 500; }
-  .tool-btn:hover { background: var(--bg-body); color: var(--primary); }
-
-  /* Right Panel Desktop */
-  .right-panel { width: 320px; background: #fff; border-left: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; z-index: 15; flex-shrink: 0; }
+  /* Right Panel */
+  .right-panel { width: 320px; background: var(--bg-panel); border-left: 1px solid var(--border-color);
+    display: flex; flex-direction: column; overflow: hidden; z-index: 15; box-shadow: -4px 0 15px rgba(0,0,0,0.03); flex-shrink: 0; }
   .panel-mobile-header { display: none; }
 
-  #panel-empty, #panel-object { padding: 20px; overflow-y: auto; flex-shrink: 0;}
+  #panel-empty, #panel-object { padding: 20px; overflow-y: auto; max-height: 60vh; flex-shrink: 0;}
+  #panel-empty p { font-size: 14px; color: var(--text-muted); text-align: center; margin: 30px 0; }
   .field { margin-bottom: 16px; }
-  .field label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
-  .field input[type=color] { width: 100%; height: 40px; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer; padding: 4px; }
-  .field input[type=number], .field select { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border-color); font-size: 14px; outline: none; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+  .field input[type=color] { width: 100%; height: 40px; border: 1px solid var(--border-color);
+    border-radius: 8px; cursor: pointer; padding: 4px; background: var(--bg-panel); }
+  .field input[type=number], .field select { width: 100%; padding: 10px 12px; border-radius: 8px; font-size: 14px; outline: none; }
+  .field input:focus, .field select:focus { border-color: var(--primary); }
   .field input[type=range] { width: 100%; accent-color: var(--primary); }
   .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
-  .btn-group button { flex: 1; min-width: 44px; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 14px; background: #fff; color: var(--text-main); font-weight: 500; }
-  .btn-group button.active { background: #f5f3ff; border-color: var(--primary); color: var(--primary); font-weight: 600; }
+  .btn-group button { flex: 1; min-width: 44px; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px;
+    font-size: 14px; background: var(--bg-panel); color: var(--text-main); font-weight: 500; }
+  .btn-group button:hover { background: var(--bg-body); }
+  .btn-group button.active { background: rgba(139, 92, 246, 0.1); border-color: var(--primary); color: var(--primary); font-weight: 700; }
   
-  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-color); margin-bottom: 16px; }
-  .tab { padding: 10px 16px; font-size: 14px; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; cursor: pointer; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; }
+  .tab { padding: 10px 16px; font-size: 14px; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid transparent; }
+  .tab:hover { color: var(--text-main); }
   .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .tab-content .field button { padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; background: var(--bg-panel); color: var(--text-main); margin: 2px; font-weight: 500; }
+  .tab-content .field button:hover { background: var(--bg-body); }
   
-  .layers { flex: 1; overflow-y: auto; min-height: 120px; border-top: 1px solid var(--border-color); padding: 16px; background: #f9fafb; }
-  .layers h3 { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; }
+  .layers { flex: 1; overflow-y: auto; min-height: 150px; border-top: 1px solid var(--border-color); padding: 16px; background: var(--bg-body); }
+  .layers h3 { font-size: 12px; font-weight: 700; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
   #layer-list { display: flex; flex-direction: column; gap: 6px; }
-  .layer-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #fff; border-radius: 8px; cursor: pointer; font-size: 13px; border: 1px solid transparent; }
-  .layer-item.active { border-color: var(--primary); background: #f5f3ff; }
+  .layer-item { display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px; background: var(--bg-panel); border-radius: 8px; cursor: pointer; font-size: 13px; gap: 8px; border: 1px solid transparent; transition: all 0.2s; }
+  .layer-item:hover { border-color: var(--border-color); }
+  .layer-item.active { background: rgba(139, 92, 246, 0.08); border-color: var(--primary); }
   .layer-item .layer-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-  .layer-del { color: var(--text-muted); padding: 4px; }
-  .layer-del:hover { color: var(--danger); }
+  .layer-del { color: var(--text-muted); font-size: 14px; padding: 4px; border-radius: 4px; }
+  .layer-del:hover { color: var(--danger); background: rgba(239, 68, 68, 0.1); }
+
+  /* =========================================
+     FLOATING TOOLBAR (Chuẩn Canva)
+     ========================================= */
+  #floating-toolbar {
+    position: fixed; display: none; background: #1e293b; padding: 6px; border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3); z-index: 9999; gap: 2px; align-items: center;
+    color: white; transform: translateX(-50%);
+    border: 1px solid #334155;
+  }
+  #floating-toolbar button {
+    color: #cbd5e1; font-size: 16px; padding: 8px 12px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; background: transparent;
+  }
+  #floating-toolbar button:hover { background: #334155; color: white; }
+  #floating-toolbar button#float-delete:hover { background: var(--danger); color: white; }
+  #floating-toolbar .divider { width: 1px; height: 20px; background: #475569; margin: 0 4px; }
 
   /* Toast */
-  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1f2937; color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 500; z-index: 10000; box-shadow: var(--shadow-lg); animation: slideUp 0.3s ease; }
+  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: #1f2937; color: #fff; padding: 12px 24px; border-radius: 30px;
+    font-size: 14px; font-weight: 500; z-index: 10000; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); max-width: 90vw; pointer-events: none; text-align: center; }
+  .toast.error { background: var(--danger); }
+  .toast.success { background: var(--success); }
   @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
-  #floating-delete { position: fixed; display: none; z-index: 9999; width: 36px; height: 36px; background: var(--danger); color: #fff; border-radius: 50%; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4); cursor: pointer; align-items: center; justify-content: center; font-size: 16px; }
-  
+  #btn-toggle-panel { display: none; background: var(--bg-body) !important; color: var(--text-main) !important; border: 1px solid var(--border-color); }
+
   /* ==========================================
-     RESPONSIVE MOBILE (CHUẨN CANVA APP)
+     RESPONSIVE MOBILE (TỐI ƯU CHUẨN APP)
      ========================================== */
   @media (max-width: 768px) {
-    .workspace-header { padding: 8px 12px; }
-    #project-name-input { width: 120px; font-size: 14px; }
+    /* Dashboard Mobile */
+    #screen-dashboard header { flex-direction: column; align-items: stretch; padding: 16px; gap: 12px; }
+    .header-right { justify-content: space-between; }
+    #user-email { max-width: 140px; font-size: 12px; }
+    #dashboard-main { padding: 16px; }
+    #project-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+    .project-card .info { padding: 12px; }
+    .project-card .name { font-size: 14px; }
+
+    /* Workspace Header Mobile */
+    .workspace-header { flex-wrap: wrap; padding: 8px 12px; gap: 8px; min-height: auto; }
+    .workspace-header .left { width: 100%; justify-content: space-between; }
+    #project-name-input { flex: 1; width: auto; font-size: 14px; text-align: center; }
+    #save-status { position: absolute; top: 12px; right: 60px; font-size: 11px; }
     
-    /* Chuyển công cụ xuống dưới dạng thanh cuộn ngang */
+    .workspace-header .center { width: 100%; justify-content: center; background: var(--bg-body); border-radius: 8px; padding: 4px; margin-top: 4px; }
+    .workspace-header .center button { padding: 6px 12px; font-size: 15px; }
+    .workspace-header .center .sep { display: none; }
+    #btn-fit { font-size: 12px; padding: 6px 8px; }
+    
+    .workspace-header .right { width: 100%; justify-content: space-between; gap: 8px; margin-top: 4px;}
+    #btn-save { flex: 1; padding: 8px 10px !important; font-size: 14px; border-radius: 8px; }
+    .dropdown { display: none; } /* Ẩn bớt tải xuống trên mobile cho gọn */
+    #btn-toggle-panel { flex: 1; display: flex; justify-content: center; padding: 8px 10px !important; background: var(--primary) !important; color: #fff !important; border: none; font-weight: 600; border-radius: 8px; }
+
+    /* Workspace Main */
     .workspace-main { flex-direction: column; }
+    
+    /* Bottom Toolbar (Giống App Canva) */
     .left-tools { 
       width: 100%; height: auto; flex-direction: row; border-right: none; 
       border-top: 1px solid var(--border-color); padding: 8px 12px; overflow-x: auto; justify-content: flex-start; 
-      gap: 8px; flex-shrink: 0; z-index: 20; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-      scrollbar-width: none;
+      gap: 12px; flex-shrink: 0; z-index: 20;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+      scrollbar-width: none; background: var(--bg-panel);
     }
     .left-tools::-webkit-scrollbar { display: none; }
-    .tool-btn { width: 60px; height: 60px; flex-shrink: 0; background: var(--bg-body); }
-    .tool-btn i { font-size: 22px; margin-bottom: 2px;}
-    .tool-btn span { font-size: 11px; }
+    .left-tools button { 
+      width: 64px; height: 56px; flex-shrink: 0; font-size: 20px; 
+      background: transparent; border-radius: 12px; flex-direction: column; gap: 4px;
+    }
+    .left-tools button i { font-size: 22px; }
+    .left-tools button span { font-size: 11px; font-weight: 500; }
+    .left-tools button:active { background: var(--bg-body); }
+    
+    .canvas-area { flex: 1; min-height: 0; }
+    #canvas-inner { padding: 15px; }
 
-    /* Panel chuyển thành Bottom Sheet (Trượt từ dưới lên) */
+    /* Right Panel (Slide out) */
     .right-panel {
-      position: fixed; bottom: -100%; left: 0; right: 0; width: 100%; height: 60vh;
-      border-left: none; border-top: 1px solid var(--border-color);
-      border-radius: 24px 24px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
-      transition: bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 100;
+      position: absolute; right: -100%; top: 0; bottom: 0;
+      width: 85vw; max-width: 340px;
+      transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: -10px 0 30px rgba(0,0,0,0.15);
+      z-index: 50;
     }
-    .right-panel.open { bottom: 0; }
+    .right-panel.open { right: 0; }
     
-    .panel-mobile-header { 
-      display: flex; justify-content: space-between; align-items: center; 
-      padding: 16px 20px; border-bottom: 1px solid var(--border-color); font-weight: 700; 
+    .panel-mobile-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 16px; border-bottom: 1px solid var(--border-color); font-weight: 700; font-size: 16px;
+      background: var(--bg-panel); color: var(--text-main);
     }
-    #btn-close-panel { font-size: 20px; color: var(--text-muted); }
-    #panel-empty, #panel-object { max-height: calc(60vh - 60px); }
-    
-    /* Ẩn một số nút trên header mobile cho gọn */
-    .header-center { display: none; } 
-    .btn-download { display: none; } /* Đưa vào trong Panel hoặc giữ nút Lưu là đủ */
-    
-    /* Nút bật panel (Góc dưới bên phải giống Canva) */
-    #btn-toggle-panel { display: flex; position: fixed; right: 16px; bottom: 80px; width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: #fff; box-shadow: var(--shadow-lg); z-index: 50; align-items: center; justify-content: center; font-size: 20px; }
-  }
-  
-  @media (min-width: 769px) {
-    #btn-toggle-panel { display: none; }
-    .btn-close-panel { display: none; }
+    #btn-close-panel { font-size: 20px; color: var(--text-muted); padding: 4px 8px; background: var(--bg-body); border-radius: 50%; }
+    #panel-empty, #panel-object { max-height: calc(100vh - 180px); }
   }
 </style>
 </head>
 <body>
 
 <!-- Loading -->
-<div id="screen-loading" class="screen"><i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i> Đang tải...</div>
+<div id="screen-loading" class="screen">Đang tải không gian làm việc...</div>
 
 <!-- Auth -->
 <div id="screen-auth" class="screen hidden">
   <div class="auth-card">
     <h1>Netizen Editor</h1>
-    <p class="sub">Đăng nhập để bắt đầu sáng tạo</p>
+    <p class="sub">Đăng nhập bằng email để bắt đầu thiết kế</p>
     <label>Email của bạn</label>
     <input type="email" id="auth-email" placeholder="ban@example.com" autocomplete="email">
     <button id="btn-send-link">Gửi link đăng nhập</button>
@@ -284,36 +327,21 @@
 
 <!-- Dashboard -->
 <div id="screen-dashboard" class="screen hidden">
-  <header class="dash-header">
-    <div class="top-nav">
-      <div class="logo"><i class="fas fa-bolt"></i> Netizen</div>
-      <div class="user-profile">
-        <span id="user-email"></span>
-        <button id="btn-logout" class="btn-icon" title="Đăng xuất"><i class="fas fa-sign-out-alt"></i></button>
+  <header>
+    <h1>Netizen Editor</h1>
+    <div class="header-right">
+      <span id="user-email"></span>
+      <div style="display:flex; gap:8px;">
+        <button id="btn-logout">Đăng xuất</button>
+        <button id="btn-new-project">+ Tạo mới</button>
       </div>
     </div>
-    <div class="search-bar">
-      <i class="fas fa-search"></i>
-      <input type="text" placeholder="Bạn muốn thiết kế gì hôm nay?">
-    </div>
   </header>
-
-  <main class="dash-content">
-    <button id="btn-new-project" class="btn-create-main"><i class="fas fa-plus"></i> Tạo thiết kế mới</button>
-    
-    <div class="section-title">Dự án của bạn <span>Xem tất cả</span></div>
-    <div id="loading-state" style="color:var(--text-muted); font-size:14px;">Đang tải...</div>
+  <main id="dashboard-main">
+    <div id="loading-state">Đang tải dự án...</div>
     <div id="project-grid"></div>
-    <div id="empty-state" class="hidden">Chưa có thiết kế nào. Hãy tạo mới nhé!</div>
+    <div id="empty-state" class="hidden">Bạn chưa có thiết kế nào.<br><br><b>Nhấn “Tạo mới” để bắt đầu sáng tạo!</b></div>
   </main>
-
-  <!-- Bottom Nav Cho Mobile -->
-  <nav class="bottom-nav">
-    <div class="nav-item active"><i class="fas fa-home"></i> Trang chủ</div>
-    <div class="nav-item"><i class="fas fa-folder"></i> Dự án</div>
-    <div class="nav-item"><i class="fas fa-layer-group"></i> Mẫu</div>
-    <div class="nav-item"><i class="fas fa-user"></i> Tài khoản</div>
-  </nav>
 </div>
 
 <!-- Modal New Project -->
@@ -322,58 +350,75 @@
     <h2>Tạo thiết kế mới</h2>
     <label>Tên thiết kế</label>
     <input id="new-name" type="text" placeholder="VD: Banner bán hàng, Avatar...">
-    <label>Chọn kích thước</label>
+    <label>Chọn kích thước (Presets)</label>
     <div id="size-presets" class="size-grid"></div>
-    <label>Hoặc tùy chỉnh (px)</label>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-      <input id="custom-w" type="number" value="1080" min="100" max="5000">
-      <input id="custom-h" type="number" value="1080" min="100" max="5000">
+    <label>Hoặc tùy chỉnh kích thước (px)</label>
+    <div class="custom-size">
+      <input id="custom-w" type="number" value="1080" min="100" max="5000" placeholder="Chiều rộng">
+      <input id="custom-h" type="number" value="1080" min="100" max="5000" placeholder="Chiều cao">
     </div>
     <div class="modal-actions">
       <button id="btn-cancel-new">Hủy</button>
-      <button id="btn-create-new">Tạo thiết kế</button>
+      <button id="btn-create-new">Bắt đầu thiết kế</button>
     </div>
   </div>
 </div>
 
-<!-- Workspace (Editor) -->
+<!-- Workspace -->
 <div id="screen-workspace" class="screen hidden">
   <header class="workspace-header">
-    <div class="header-left">
-      <button id="btn-back" class="btn-header" title="Về trang chủ"><i class="fas fa-arrow-left"></i></button>
+    <div class="left">
+      <button id="btn-back" title="Về trang chủ">←</button>
       <input id="project-name-input" type="text">
-      <span id="save-status">Đã lưu</span>
+      <span id="save-status"></span>
     </div>
     
-    <!-- Undo/Redo (Chỉ hiện trên Desktop) -->
-    <div class="header-center">
-      <button id="btn-undo" class="btn-header" title="Hoàn tác"><i class="fas fa-undo"></i></button>
-      <button id="btn-redo" class="btn-header" title="Làm lại"><i class="fas fa-redo"></i></button>
+    <div class="center">
+      <button id="btn-undo" title="Hoàn tác">↶</button>
+      <button id="btn-redo" title="Làm lại">↷</button>
+      <span class="sep">|</span>
+      <button id="btn-zoom-out">−</button>
+      <span id="zoom-label">100%</span>
+      <button id="btn-zoom-in">+</button>
+      <button id="btn-fit" title="Vừa màn hình">Vừa màn hình</button>
     </div>
 
-    <div class="header-right">
-      <button id="btn-save" class="btn-header" style="width: auto; background: var(--primary); color: #fff;">Lưu</button>
+    <div class="right">
+      <button id="btn-save">Lưu</button>
+      
       <div class="dropdown">
-        <button id="btn-download" class="btn-download"><i class="fas fa-download"></i> Tải</button>
+        <button id="btn-download">Tải xuống ▾</button>
         <div class="dropdown-menu hidden" id="download-menu">
-          <button data-format="png" data-quality="1" data-scale="2"><i class="fas fa-image"></i> PNG chất lượng cao</button>
-          <button data-format="jpeg" data-quality="0.92" data-scale="2"><i class="fas fa-file-image"></i> JPG (nhẹ hơn)</button>
+          <button data-format="png" data-quality="1" data-scale="2">🖼 PNG chất lượng cao</button>
+          <button data-format="jpeg" data-quality="0.92" data-scale="2">📷 JPG (nhẹ hơn)</button>
+          <button data-format="png" data-quality="1" data-scale="1">⚡ PNG đúng gốc</button>
         </div>
       </div>
+      
+      <!-- Nút menu 3 chấm (chứa Lưu Mẫu) -->
+      <div class="dropdown">
+        <button id="btn-more-options">⋮</button>
+        <div class="dropdown-menu hidden" id="more-menu" style="min-width: 180px;">
+          <!-- Nút Lưu Mẫu chỉ hiện với Admin -->
+          <button id="btn-save-template" class="hidden" style="color: var(--success) !important;">💾 Lưu làm Mẫu</button>
+          <button id="btn-delete-project" style="color: var(--danger) !important;">🗑️ Xóa dự án này</button>
+        </div>
+      </div>
+
+      <button id="btn-toggle-panel" title="Bảng điều khiển">⚙️ Công cụ</button>
     </div>
   </header>
   
   <main class="workspace-main">
-    <!-- Thanh công cụ dưới (Mobile) / Trái (PC) -->
     <aside class="left-tools">
-      <button data-tool="text" class="tool-btn"><i class="fas fa-font"></i><span>Văn bản</span></button>
-      <button data-tool="image" class="tool-btn"><i class="fas fa-image"></i><span>Ảnh</span></button>
-      <button data-tool="rect" class="tool-btn"><i class="fas fa-square"></i><span>Hình CN</span></button>
-      <button data-tool="circle" class="tool-btn"><i class="fas fa-circle"></i><span>Hình tròn</span></button>
-      <button data-tool="triangle" class="tool-btn"><i class="fas fa-play" style="transform: rotate(-90deg);"></i><span>Tam giác</span></button>
-      <button data-tool="star" class="tool-btn"><i class="fas fa-star"></i><span>Ngôi sao</span></button>
-      <button data-tool="line" class="tool-btn"><i class="fas fa-slash"></i><span>Đường kẻ</span></button>
-      <button data-tool="statusbar" class="tool-btn"><i class="fas fa-mobile-alt"></i><span>Trạng thái</span></button>
+      <button data-tool="text" title="Văn bản"><i>T</i><span>Văn bản</span></button>
+      <button data-tool="image" title="Tải ảnh lên"><i>🖼</i><span>Ảnh</span></button>
+      <button data-tool="rect" title="Hình chữ nhật"><i>▭</i><span>Hình CN</span></button>
+      <button data-tool="circle" title="Hình tròn"><i>◯</i><span>Hình tròn</span></button>
+      <button data-tool="triangle" title="Tam giác"><i>△</i><span>Tam giác</span></button>
+      <button data-tool="star" title="Ngôi sao"><i>☆</i><span>Ngôi sao</span></button>
+      <button data-tool="line" title="Đường kẻ"><i>╱</i><span>Đường kẻ</span></button>
+      <button data-tool="statusbar" title="Thanh trạng thái"><i>📱</i><span>Status Bar</span></button>
     </aside>
     
     <section class="canvas-area">
@@ -384,18 +429,14 @@
       </div>
     </section>
     
-    <!-- Nút bật Panel trên Mobile -->
-    <button id="btn-toggle-panel" title="Bảng điều khiển"><i class="fas fa-sliders-h"></i></button>
-
-    <!-- Right Panel / Bottom Sheet -->
     <aside class="right-panel" id="right-panel">
       <div class="panel-mobile-header">
         <span>Thuộc tính</span>
-        <button id="btn-close-panel" class="btn-close-panel"><i class="fas fa-times"></i></button>
+        <button id="btn-close-panel">✕</button>
       </div>
 
       <div id="panel-empty">
-        <p style="text-align:center; color:var(--text-muted); margin: 30px 0; font-size:14px;">Chọn một đối tượng trên bản vẽ để chỉnh sửa</p>
+        <p>Chọn một đối tượng trên bản vẽ để chỉnh sửa thuộc tính.</p>
         <div class="field">
           <label>Màu nền toàn trang</label>
           <input type="color" id="bg-color" value="#ffffff">
@@ -415,7 +456,7 @@
             <input type="range" id="obj-opacity" min="0" max="100" value="100">
           </div>
           <div class="field">
-            <button id="btn-crop" style="width: 100%; background: #f5f3ff; color: #8b5cf6; padding: 12px; border-radius: 8px; font-weight: 600; border: 1px solid #ddd6fe;"><i class="fas fa-crop"></i> Cắt Ảnh</button>
+            <button id="btn-crop" style="width: 100%; background: #a855f7; color: white; padding: 10px; border-radius: 8px; font-weight: 600;">✂️ Cắt Ảnh</button>
           </div>
           <div class="field" id="field-color">
             <label>Màu sắc</label>
@@ -426,32 +467,45 @@
             <div class="field">
               <label>Phông chữ</label>
               <select id="font-family">
-                <option value="Inter">Inter (Hiện đại)</option>
-                <option value="Arial, sans-serif">Arial</option>
-                <option value="Roboto">Roboto</option>
-                <option value="Playfair Display">Playfair (Sang trọng)</option>
-                <option value="Dancing Script">Dancing (Viết tay)</option>
+                <optgroup label="Cơ bản">
+                  <option value="Inter">Inter (Khuyên dùng)</option>
+                  <option value="Arial, sans-serif">Arial</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Open Sans">Open Sans</option>
+                  <option value="Be Vietnam Pro">Be Vietnam Pro</option>
+                </optgroup>
+                <optgroup label="Tiêu đề / Sang trọng">
+                  <option value="Montserrat">Montserrat</option>
+                  <option value="Poppins">Poppins</option>
+                  <option value="Playfair Display">Playfair Display</option>
+                  <option value="Bebas Neue">Bebas Neue</option>
+                  <option value="Oswald">Oswald</option>
+                </optgroup>
+                <optgroup label="Viết tay / Cá tính">
+                  <option value="Dancing Script">Dancing Script</option>
+                  <option value="Lobster">Lobster</option>
+                </optgroup>
               </select>
             </div>
             <div class="field">
-              <label>Cỡ chữ</label>
+              <label>Cỡ chữ (Size)</label>
               <input type="number" id="font-size" min="6" max="400" value="32">
             </div>
             <div class="field">
               <label>Định dạng</label>
               <div class="btn-group">
-                <button id="btn-bold"><i class="fas fa-bold"></i></button>
-                <button id="btn-italic"><i class="fas fa-italic"></i></button>
-                <button id="btn-underline"><i class="fas fa-underline"></i></button>
+                <button id="btn-bold" title="In đậm"><b>B</b></button>
+                <button id="btn-italic" title="In nghiêng"><i>I</i></button>
+                <button id="btn-underline" title="Gạch chân"><u>U</u></button>
               </div>
             </div>
             <div class="field">
               <label>Căn lề</label>
               <div class="btn-group">
-                <button data-align="left"><i class="fas fa-align-left"></i></button>
-                <button data-align="center"><i class="fas fa-align-center"></i></button>
-                <button data-align="right"><i class="fas fa-align-right"></i></button>
-                <button data-align="justify"><i class="fas fa-align-justify"></i></button>
+                <button data-align="left">Trái</button>
+                <button data-align="center">Giữa</button>
+                <button data-align="right">Phải</button>
+                <button data-align="justify">Đều</button>
               </div>
             </div>
           </div>
@@ -459,36 +513,46 @@
         
         <div class="tab-content hidden" data-tab-content="arrange">
           <div class="field">
-            <button id="btn-forward" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:8px;">Lên một lớp</button>
-            <button id="btn-backward" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:8px;">Xuống một lớp</button>
+            <button id="btn-forward">Lên một lớp</button>
+            <button id="btn-backward">Xuống một lớp</button>
+          </div>
+          <div class="field">
+            <button id="btn-front">Lên trên cùng</button>
+            <button id="btn-back-layer">Xuống dưới cùng</button>
           </div>
         </div>
         
         <div class="tab-content hidden" data-tab-content="pos">
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
             <div class="field"><label>X</label><input type="number" id="pos-x"></div>
             <div class="field"><label>Y</label><input type="number" id="pos-y"></div>
             <div class="field"><label>Rộng</label><input type="number" id="pos-w"></div>
             <div class="field"><label>Cao</label><input type="number" id="pos-h"></div>
           </div>
           <div class="field"><label>Góc xoay (°)</label><input type="number" id="pos-angle"></div>
-          <div class="field" style="display:flex; gap:8px; margin-top: 20px;">
-            <button id="btn-duplicate" style="flex:1; padding:10px; border:1px solid #ddd; border-radius:8px;"><i class="fas fa-copy"></i> Nhân bản</button>
-            <button id="btn-delete" style="flex:1; padding:10px; border:1px solid #fca5a5; color:var(--danger); border-radius:8px; background:#fef2f2;"><i class="fas fa-trash"></i> Xóa</button>
-          </div>
         </div>
       </div>
       
       <div class="layers">
-        <h3>Các lớp</h3>
+        <h3>Các lớp (Layers)</h3>
         <div id="layer-list"></div>
       </div>
     </aside>
   </main>
 </div>
 
+<!-- Floating Toolbar (Canva Style) -->
+<div id="floating-toolbar" class="hidden">
+  <button id="float-duplicate" title="Nhân bản">📋</button>
+  <button id="float-lock" title="Khóa">🔒</button>
+  <div class="divider"></div>
+  <button id="float-forward" title="Lên lớp">⬆️</button>
+  <button id="float-backward" title="Xuống lớp">⬇️</button>
+  <div class="divider"></div>
+  <button id="float-delete" title="Xóa">🗑️</button>
+</div>
+
 <input type="file" id="file-image" accept="image/*" style="display:none">
-<button id="floating-delete" title="Xóa"><i class="fas fa-trash"></i></button>
 
 <script>
 /* ============================================================
@@ -505,6 +569,8 @@ fabric.Object.prototype.objectCaching = false;
    STATE
    ============================================================ */
 const STORAGE_BUCKET = 'design-assets';
+const ADMIN_EMAIL = 'icloud.ngdachao@gmail.com';
+
 const SIZE_PRESETS = [
   { name: 'Instagram Post', w: 1080, h: 1080 },
   { name: 'Instagram Story', w: 1080, h: 1920 },
@@ -546,7 +612,7 @@ function sanitizeFilename(s) {
 function toast(msg, type = '') {
   const el = document.createElement('div');
   el.className = 'toast ' + type;
-  el.innerHTML = (type === 'error' ? '<i class="fas fa-exclamation-circle"></i> ' : '<i class="fas fa-check-circle"></i> ') + msg;
+  el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 3000);
 }
@@ -555,7 +621,7 @@ function hideAll() {
 }
 
 /* ============================================================
-   MOBILE PANEL TOGGLE (Bottom Sheet)
+   MOBILE PANEL TOGGLE
 ============================================================ */
 $('btn-toggle-panel').addEventListener('click', () => {
   $('right-panel').classList.add('open');
@@ -587,7 +653,7 @@ $('btn-send-link').addEventListener('click', async () => {
     msg.textContent = 'Lỗi: ' + error.message;
     msg.className = 'error';
   } else {
-    msg.textContent = '✓ Đã gửi! Vui lòng kiểm tra Email.';
+    msg.textContent = '✓ Đã gửi! Vui lòng kiểm tra Email (cả mục Spam).';
     msg.className = '';
   }
 });
@@ -610,6 +676,14 @@ sb.auth.onAuthStateChange((event, session) => {
     if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
       $('user-email').textContent = currentUser.email || '';
       $('user-email').title = currentUser.email || '';
+      
+      // Hiện nút Lưu Mẫu nếu là Admin
+      if (currentUser.email === ADMIN_EMAIL) {
+        $('btn-save-template').classList.remove('hidden');
+      } else {
+        $('btn-save-template').classList.add('hidden');
+      }
+      
       showDashboard();
     }
   } else {
@@ -664,17 +738,17 @@ function renderDashboard() {
     const bg = p.background || '#e5e7eb';
     
     card.innerHTML = `
-      <div class="thumb" style="background:linear-gradient(135deg, ${bg} 0%, #d1d5db 100%)">
-        <i class="fas fa-palette" style="opacity:0.5;"></i>
+      <div class="thumb" style="background:linear-gradient(135deg, ${bg} 0%, #cbd5e1 100%)">
+        <span style="text-shadow: 0 2px 4px rgba(0,0,0,0.2); color: #fff;">${escapeHtml((p.name || '?')[0].toUpperCase())}</span>
       </div>
       <div class="info">
         <div class="name">${escapeHtml(p.name)}</div>
         <div class="meta">${p.width} × ${p.height} px</div>
       </div>
-      <button class="delete-btn" title="Xóa"><i class="fas fa-trash"></i></button>`;
+      <button class="delete-btn" title="Xóa">✕</button>`;
 
     card.addEventListener('click', (e) => {
-      if (e.target.closest('.delete-btn')) return;
+      if (e.target.classList.contains('delete-btn')) return;
       openProject(p.id);
     });
     card.querySelector('.delete-btn').addEventListener('click', async (e) => {
@@ -702,11 +776,11 @@ $('btn-new-project').addEventListener('click', () => {
   SIZE_PRESETS.forEach((s, i) => {
     const aspect = s.w / s.h;
     let pw, ph;
-    if (aspect >= 1) { pw = 50; ph = 50 / aspect; } else { ph = 50; pw = 50 * aspect; }
+    if (aspect >= 1) { pw = 60; ph = 60 / aspect; } else { ph = 60; pw = 60 * aspect; }
     const btn = document.createElement('button');
     btn.className = 'size-btn';
-    btn.innerHTML = `<div style="width:${pw}px;height:${ph}px;border:1px solid #ccc;margin:0 auto 8px;border-radius:2px;"></div>
-      <div>${s.name}</div><div style="color:#9ca3af;font-size:10px;margin-top:4px;">${s.w}×${s.h}</div>`;
+    btn.innerHTML = `<div class="preview" style="width:${pw}px;height:${ph}px"></div>
+      <div>${s.name}</div><div class="dim">${s.w}×${s.h}</div>`;
     btn.addEventListener('click', () => {
       $('custom-w').value = s.w;
       $('custom-h').value = s.h;
@@ -753,7 +827,7 @@ $('btn-create-new').addEventListener('click', async () => {
 });
 
 /* ============================================================
-   OPEN PROJECT & WORKSPACE
+   OPEN PROJECT
 ============================================================ */
 async function openProject(id) {
   const { data: p, error } = await sb.from('projects').select('*').eq('id', id).single();
@@ -763,7 +837,7 @@ async function openProject(id) {
   hideAll();
   $('screen-workspace').classList.remove('hidden');
   $('project-name-input').value = p.name;
-  $('save-status').style.display = 'none';
+  $('save-status').textContent = '';
   $('bg-color').value = p.background || '#ffffff';
   dirty = false;
 
@@ -839,7 +913,7 @@ function initCanvas(project) {
         canvas.renderAll();
         isRestoring = false;
         saveHistory(); refreshLayers(); updateObjectPanel();
-        updateFloatingDelete();
+        updateFloatingToolbar();
         setTimeout(fitToScreen, 200); 
       });
     });
@@ -853,20 +927,20 @@ function initCanvas(project) {
     setTimeout(fitToScreen, 200);
   }
 
-  canvas.on('selection:created', () => { updateObjectPanel(); refreshLayers(); updateFloatingDelete(); });
-  canvas.on('selection:updated', () => { updateObjectPanel(); refreshLayers(); updateFloatingDelete(); });
-  canvas.on('selection:cleared', () => { updateObjectPanel(); refreshLayers(); $('floating-delete').style.display = 'none'; });
+  canvas.on('selection:created', () => { updateObjectPanel(); refreshLayers(); updateFloatingToolbar(); });
+  canvas.on('selection:updated', () => { updateObjectPanel(); refreshLayers(); updateFloatingToolbar(); });
+  canvas.on('selection:cleared', () => { updateObjectPanel(); refreshLayers(); $('floating-toolbar').classList.add('hidden'); });
   
-  canvas.on('object:moving', updateFloatingDelete);
-  canvas.on('object:scaling', updateFloatingDelete);
-  canvas.on('object:rotating', updateFloatingDelete);
+  canvas.on('object:moving', updateFloatingToolbar);
+  canvas.on('object:scaling', updateFloatingToolbar);
+  canvas.on('object:rotating', updateFloatingToolbar);
   canvas.on('object:modified', () => {
     if (!isRestoring) { saveHistory(); markUnsaved(); }
     updateObjectPanel();
-    updateFloatingDelete();
+    updateFloatingToolbar();
   });
   
-  $('canvas-scroll').addEventListener('scroll', updateFloatingDelete);
+  $('canvas-scroll').addEventListener('scroll', updateFloatingToolbar);
 
   canvas.on('mouse:wheel', function(opt) {
     var delta = opt.e.deltaY;
@@ -876,16 +950,24 @@ function initCanvas(project) {
     if (zoom < 0.05) zoom = 0.05;
     canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
     currentZoom = zoom;
-    updateFloatingDelete();
+    $('zoom-label').textContent = Math.round(zoom * 100) + '%';
+    updateFloatingToolbar();
     opt.e.preventDefault();
     opt.e.stopPropagation();
   });
 }
 
+// Tự động tính lại kích thước canvas khi xoay ngang, resize, hoặc chuyển tab
 window.addEventListener('resize', () => {
   if (canvas) {
-    fitToScreen();
     canvas.calcOffset();
+    fitToScreen();
+  }
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && canvas) {
+    canvas.calcOffset();
+    fitToScreen();
   }
 });
 
@@ -975,36 +1057,64 @@ function enableSmartGuides(c) {
 }
 
 /* ============================================================
-   LOGIC NÚT XÓA NỔI
+   FLOATING TOOLBAR LOGIC (CHUẨN CANVA)
 ============================================================ */
-const floatingDelete = document.getElementById('floating-delete');
+const floatingToolbar = $('floating-toolbar');
 
-function updateFloatingDelete() {
+function updateFloatingToolbar() {
   const activeObj = canvas.getActiveObject();
   if (!activeObj || activeObj.isEditing) {
-    floatingDelete.style.display = 'none';
+    floatingToolbar.classList.add('hidden');
     return;
   }
 
-  const coords = activeObj.oCoords.tr; 
+  const coords = activeObj.oCoords.mt; // Middle Top
   const canvasRect = canvas.upperCanvasEl.getBoundingClientRect();
 
-  const left = canvasRect.left + coords.x + 10;
-  const top = canvasRect.top + coords.y - 18;
+  let left = canvasRect.left + coords.x;
+  let top = canvasRect.top + coords.y - 50; // Cách 50px lên trên
 
+  // Nếu object ở quá cao, đặt thanh toolbar xuống dưới
   if (top < 60) {
-    const bottomCoords = activeObj.oCoords.br;
-    floatingDelete.style.top = `${canvasRect.top + bottomCoords.y + 10}px`;
-    floatingDelete.style.left = `${canvasRect.left + bottomCoords.x - 18}px`;
-  } else {
-    floatingDelete.style.left = `${left}px`;
-    floatingDelete.style.top = `${top}px`;
+    const bottomCoords = activeObj.oCoords.mb; // Middle Bottom
+    top = canvasRect.top + bottomCoords.y + 10;
   }
 
-  floatingDelete.style.display = 'flex';
+  floatingToolbar.style.left = `${left}px`;
+  floatingToolbar.style.top = `${top}px`;
+  floatingToolbar.classList.remove('hidden');
+  
+  // Cập nhật icon khóa
+  $('float-lock').innerHTML = activeObj.lockMovementX ? '🔓' : '🔒';
+  $('float-lock').title = activeObj.lockMovementX ? 'Mở khóa' : 'Khóa';
 }
 
-floatingDelete.addEventListener('click', (e) => {
+$('float-duplicate').addEventListener('click', () => {
+  const o = canvas.getActiveObject(); if (!o) return;
+  o.clone(c => {
+    c.set({ left: (o.left || 0) + 24, top: (o.top || 0) + 24 });
+    canvas.add(c); canvas.setActiveObject(c); canvas.renderAll();
+    saveHistory(); markUnsaved();
+  });
+});
+
+$('float-lock').addEventListener('click', () => {
+  const o = canvas.getActiveObject(); if (!o) return;
+  const isLocked = o.lockMovementX;
+  o.set({
+    lockMovementX: !isLocked, lockMovementY: !isLocked,
+    lockRotation: !isLocked, lockScalingX: !isLocked, lockScalingY: !isLocked,
+    hasControls: isLocked, selectable: true
+  });
+  canvas.renderAll();
+  updateFloatingToolbar();
+  saveHistory(); markUnsaved();
+});
+
+$('float-forward').addEventListener('click', () => { const o = canvas.getActiveObject(); if (o) { canvas.bringForward(o); canvas.renderAll(); saveHistory(); markUnsaved(); }});
+$('float-backward').addEventListener('click', () => { const o = canvas.getActiveObject(); if (o) { canvas.sendBackwards(o); canvas.renderAll(); saveHistory(); markUnsaved(); }});
+
+$('float-delete').addEventListener('click', (e) => {
   e.preventDefault();
   e.stopPropagation();
   const activeObj = canvas.getActiveObject();
@@ -1015,7 +1125,7 @@ floatingDelete.addEventListener('click', (e) => {
     } else {
       canvas.remove(activeObj);
     }
-    floatingDelete.style.display = 'none';
+    floatingToolbar.classList.add('hidden');
     canvas.requestRenderAll();
     saveHistory();
     markUnsaved();
@@ -1024,12 +1134,14 @@ floatingDelete.addEventListener('click', (e) => {
   }
 });
 
+// Sự kiện double click để tách nhóm
 canvas.on('mouse:dblclick', (e) => {
   const obj = e.target;
   if (obj && obj.type === 'group') {
     obj.toActiveSelection();
     canvas.requestRenderAll();
     toast('Đã tách nhóm!', 'success');
+    updateFloatingToolbar();
   }
 });
 
@@ -1082,7 +1194,7 @@ function restoreHistory() {
   canvas.loadFromJSON(history[historyIndex], () => {
     canvas.renderAll();
     isRestoring = false;
-    updateUndoRedo(); updateObjectPanel(); refreshLayers(); markUnsaved(); updateFloatingDelete();
+    updateUndoRedo(); updateObjectPanel(); refreshLayers(); markUnsaved(); updateFloatingToolbar();
   });
 }
 function updateUndoRedo() {
@@ -1092,7 +1204,7 @@ function updateUndoRedo() {
 
 function markUnsaved() {
   dirty = true;
-  $('save-status').textContent = 'Đang lưu...';
+  $('save-status').textContent = 'Chưa lưu...';
   $('save-status').style.display = 'inline';
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => saveCurrentProject(true), 2000);
@@ -1114,8 +1226,8 @@ async function saveCurrentProject(silent = false) {
     return;
   }
   currentProject.name = name; currentProject.background = background; dirty = false;
-  $('save-status').textContent = 'Đã lưu';
-  setTimeout(() => { if (!dirty) { $('save-status').style.display = 'none'; } }, 1500);
+  $('save-status').textContent = 'Đã lưu ✓';
+  setTimeout(() => { if (!dirty) { $('save-status').textContent = ''; $('save-status').style.display = 'none'; } }, 1500);
 }
 
 $('btn-save').addEventListener('click', () => saveCurrentProject(false));
@@ -1127,7 +1239,8 @@ function applyZoom(z) {
   canvas.setZoom(currentZoom);
   canvas.setDimensions({ width: currentProject.width * currentZoom, height: currentProject.height * currentZoom }); 
   canvas.renderAll();
-  updateFloatingDelete();
+  $('zoom-label').textContent = Math.round(currentZoom * 100) + '%';
+  updateFloatingToolbar();
 }
 function fitToScreen() {
   if (!canvas || !currentProject) return;
@@ -1138,6 +1251,7 @@ function fitToScreen() {
 }
 $('btn-zoom-in').addEventListener('click', () => applyZoom(currentZoom * 1.15));
 $('btn-zoom-out').addEventListener('click', () => applyZoom(currentZoom / 1.15));
+$('btn-fit').addEventListener('click', fitToScreen);
 $('btn-undo').addEventListener('click', undo);
 $('btn-redo').addEventListener('click', redo);
 
@@ -1162,7 +1276,7 @@ function getStarPoints(spikes, outerR, innerR) {
 
 function addShape(type) {
   const cx = canvas.getWidth() / 2, cy = canvas.getHeight() / 2;
-  const opts = { left: cx, top: cy, originX: 'center', originY: 'center', fill: '#3b82f6' };
+  const opts = { left: cx, top: cy, originX: 'center', originY: 'center', fill: '#8b5cf6' };
   let shape;
   if (type === 'rect') shape = new fabric.Rect({ ...opts, width: 240, height: 160 });
   else if (type === 'circle') shape = new fabric.Circle({ ...opts, radius: 110 });
@@ -1197,6 +1311,11 @@ function addStatusBar() {
 
 document.querySelectorAll('.left-tools button').forEach(b => {
   b.addEventListener('click', () => {
+    // Tắt active cũ
+    document.querySelectorAll('.left-tools button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    setTimeout(() => b.classList.remove('active'), 300); // Hiệu ứng nháy
+
     const t = b.dataset.tool;
     if (t === 'text') addText();
     else if (t === 'image') $('file-image').click();
@@ -1351,6 +1470,8 @@ $('obj-opacity').addEventListener('change', () => { saveHistory(); markUnsaved()
 
 $('btn-forward').addEventListener('click', () => { const o = getActive(); if (o) { canvas.bringForward(o); refresh(); }});
 $('btn-backward').addEventListener('click', () => { const o = getActive(); if (o) { canvas.sendBackwards(o); refresh(); }});
+$('btn-front').addEventListener('click', () => { const o = getActive(); if (o) { canvas.bringToFront(o); refresh(); }});
+$('btn-back-layer').addEventListener('click', () => { const o = getActive(); if (o) { canvas.sendToBack(o); refresh(); }});
 
 ['pos-x','pos-y','pos-w','pos-h','pos-angle'].forEach(id => {
   $(id).addEventListener('change', e => {
@@ -1365,21 +1486,6 @@ $('btn-backward').addEventListener('click', () => { const o = getActive(); if (o
   });
 });
 
-$('btn-duplicate').addEventListener('click', () => {
-  const o = getActive(); if (!o) return;
-  o.clone(c => {
-    c.set({ left: (o.left || 0) + 24, top: (o.top || 0) + 24 });
-    canvas.add(c); canvas.setActiveObject(c); canvas.renderAll();
-    saveHistory(); markUnsaved();
-  });
-});
-$('btn-delete').addEventListener('click', () => {
-  const o = getActive(); if (!o) return;
-  canvas.remove(o); canvas.discardActiveObject(); canvas.renderAll();
-  floatingDelete.style.display = 'none';
-  saveHistory(); markUnsaved(); refreshLayers();
-});
-
 function refreshLayers() {
   const list = $('layer-list');
   if (!canvas) { list.innerHTML = ''; return; }
@@ -1390,33 +1496,26 @@ function refreshLayers() {
     const obj = objects[i];
     const div = document.createElement('div');
     div.className = 'layer-item' + (obj === active ? ' active' : '');
-    let icon = 'fa-square';
-    if (['textbox','i-text','text'].includes(obj.type)) { icon = 'fa-font'; }
-    else if (obj.type === 'image') { icon = 'fa-image'; }
-    else if (obj.type === 'circle') { icon = 'fa-circle'; }
-    else if (obj.type === 'triangle') { icon = 'fa-play'; }
-
-    let label = obj.name || obj.type;
-    if (obj.type === 'textbox' || obj.type === 'i-text') label = obj.text.substring(0,20) || 'Text';
-    else if (obj.type === 'image') label = 'Hình ảnh';
+    let label = obj.type;
+    if (['textbox','i-text','text'].includes(obj.type)) label = (obj.text || 'Text').slice(0, 24) || 'Text';
+    else if (obj.type === 'image') label = 'Ảnh';
     else if (obj.type === 'rect') label = 'Hình chữ nhật';
     else if (obj.type === 'circle') label = 'Hình tròn';
     else if (obj.type === 'triangle') label = 'Tam giác';
+    else if (obj.type === 'line') label = 'Đường kẻ';
+    else if (obj.type === 'polygon') label = 'Đa giác';
+    else if (obj.type === 'group') label = obj.name || 'Nhóm';
 
-    div.innerHTML = `<div style="display:flex; align-items:center; gap:8px; flex:1; overflow:hidden;">
-        <i class="fas ${icon}" style="color:#9ca3af; width:14px; text-align:center;"></i>
-        <span class="layer-label">${escapeHtml(label)}</span>
-      </div>
-      <button class="layer-del" title="Xóa"><i class="fas fa-trash"></i></button>`;
-    
+    div.innerHTML = `<span class="layer-label">${escapeHtml(label)}</span>
+      <button class="layer-del" title="Xóa">✕</button>`;
     div.addEventListener('click', (e) => {
-      if (e.target.closest('.layer-del')) return;
+      if (e.target.classList.contains('layer-del')) return;
       canvas.setActiveObject(obj); canvas.renderAll();
-      updateObjectPanel(); refreshLayers();
+      updateObjectPanel(); refreshLayers(); updateFloatingToolbar();
     });
     div.querySelector('.layer-del').addEventListener('click', (e) => {
       e.stopPropagation();
-      canvas.remove(obj); canvas.renderAll(); saveHistory(); markUnsaved();
+      canvas.remove(obj); canvas.renderAll(); saveHistory(); markUnsaved(); updateFloatingToolbar();
     });
     list.appendChild(div);
   }
@@ -1426,7 +1525,14 @@ $('btn-download').addEventListener('click', (e) => {
   e.stopPropagation();
   $('download-menu').classList.toggle('hidden');
 });
-document.addEventListener('click', () => $('download-menu').classList.add('hidden'));
+$('btn-more-options').addEventListener('click', (e) => {
+  e.stopPropagation();
+  $('more-menu').classList.toggle('hidden');
+});
+document.addEventListener('click', () => {
+  $('download-menu').classList.add('hidden');
+  $('more-menu').classList.add('hidden');
+});
 
 $('download-menu').querySelectorAll('button').forEach(b => {
   b.addEventListener('click', () => {
@@ -1473,7 +1579,7 @@ document.addEventListener('keydown', (e) => {
         canvas.discardActiveObject();
       } else canvas.remove(active);
       canvas.renderAll();
-      floatingDelete.style.display = 'none';
+      $('floating-toolbar').classList.add('hidden');
       saveHistory(); markUnsaved(); refreshLayers();
       e.preventDefault();
     }
@@ -1482,14 +1588,87 @@ document.addEventListener('keydown', (e) => {
   } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
     e.preventDefault(); redo();
   } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
-    e.preventDefault(); $('btn-duplicate').click();
+    e.preventDefault(); $('float-duplicate').click();
   } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
     e.preventDefault(); saveCurrentProject(false);
+  } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'g') {
+    e.preventDefault(); ungroupSelected();
   }
 });
 
 window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 document.fonts.ready.then(() => { if (canvas) canvas.renderAll(); });
+
+$('btn-save-template').addEventListener('click', async () => {
+  if (!currentProject || !canvas) return;
+  if (currentUser.email !== ADMIN_EMAIL) { 
+    toast('Bạn không có quyền lưu mẫu!', 'error'); return;
+  }
+  const tplName = prompt('Nhập tên mẫu:', 'TikTok Template');
+  if (!tplName) return;
+  toast('Đang lưu mẫu...');
+  const json = canvas.toJSON(['id', 'name']);
+  const { error } = await sb.from('templates').insert({ name: tplName, width: currentProject.width, height: currentProject.height, data: json });
+  if (error) toast('Lỗi lưu mẫu: ' + error.message, 'error');
+  else toast('Đã lưu mẫu thành công!', 'success');
+});
+
+$('btn-delete-project').addEventListener('click', async () => {
+  if (!currentProject) return;
+  if (!confirm(`Bạn có chắc chắn muốn xóa dự án "${currentProject.name}"?`)) return;
+  const { error } = await sb.from('projects').delete().eq('id', currentProject.id);
+  if (error) { toast('Lỗi xóa dự án: ' + error.message, 'error'); return; }
+  toast('Đã xóa dự án!', 'success');
+  currentProject = null;
+  backToDashboard();
+});
+
+// CẮT ẢNH (CROP)
+let isCropping = false, cropOverlay = null, imageToCrop = null;
+
+$('btn-crop').addEventListener('click', () => {
+  const o = getActive();
+  if (isCropping) {
+    isCropping = false;
+    $('btn-crop').innerText = '✂️ Cắt Ảnh';
+    $('btn-crop').style.background = '#a855f7';
+    if (imageToCrop && cropOverlay) {
+      cropOverlay.set({ absolutePositioned: false });
+      const zoom = canvas.getZoom(), img = imageToCrop, rect = cropOverlay;
+      const imgBounds = img.getBoundingRect(), rectBounds = rect.getBoundingRect();
+      img.clipPath = new fabric.Rect({
+        left: (rectBounds.left - imgBounds.left) / zoom,
+        top: (rectBounds.top - imgBounds.top) / zoom,
+        width: (rectBounds.width / zoom),
+        height: (rectBounds.height / zoom),
+        originX: 'left', originY: 'top', absolutePositioned: false
+      });
+      img.set({ selectable: true, opacity: 1 });
+      canvas.remove(cropOverlay);
+      canvas.setActiveObject(img);
+    }
+    canvas.renderAll(); saveHistory(); markUnsaved(); return;
+  }
+  if (!o || o.type !== 'image') { toast('Vui lòng chọn ảnh!', 'error'); return; }
+  isCropping = true; imageToCrop = o;
+  $('btn-crop').innerText = '✅ Lưu Cắt';
+  $('btn-crop').style.background = '#10b981';
+  o.set({ selectable: false, opacity: 0.5 });
+  cropOverlay = new fabric.Rect({
+    left: o.left, top: o.top, width: o.width * o.scaleX, height: o.height * o.scaleY,
+    originX: o.originX, originY: o.originY, angle: o.angle,
+    fill: 'transparent', stroke: '#a855f7', strokeWidth: 2, strokeDashArray: [5, 5],
+    cornerColor: '#a855f7', cornerStyle: 'circle', absolutePositioned: true
+  });
+  o.set({ clipPath: cropOverlay });
+  canvas.add(cropOverlay); canvas.setActiveObject(cropOverlay); canvas.renderAll();
+});
+
+canvas.on('object:moving', (e) => {
+  if (isCropping && e.target === imageToCrop && cropOverlay) {
+    cropOverlay.set({ left: e.target.left, top: e.target.top, angle: e.target.angle });
+  }
+});
 </script>
 </body>
 </html>
