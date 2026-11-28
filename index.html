@@ -698,14 +698,17 @@ function initCanvas(project) {
   el.width = project.width;
   el.height = project.height;
 
+  // TẮT CACHE VÀ RETINA SCALING ĐỂ TRÁNH LỖI NỬA TRẮNG NỬA ĐEN
+  fabric.Object.prototype.objectCaching = false; 
+
   canvas = new fabric.Canvas('c', {
     width: project.width,
     height: project.height,
     backgroundColor: project.background || '#ffffff',
     preserveObjectStacking: true,
-    selection: true
+    selection: true,
+    enableRetinaScaling: false // <--- Dòng quan trọng nhất để fix lỗi màn hình Retina
   });
-
   // BẬT CĂN LỀ THÔNG MINH
   enableSmartGuides(canvas);
 
