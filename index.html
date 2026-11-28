@@ -171,7 +171,7 @@
   /* Toast */
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: #1f2937; color: #fff; padding: 11px 20px; border-radius: 8px;
-    font-size: 14px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    font-size: 14px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,.2);
     animation: slideUp .25s ease; max-width: 90vw; }
   .toast.error { background: #dc2626; }
   .toast.success { background: #059669; }
@@ -252,7 +252,7 @@
     </div>
     <div class="right">
       <button id="btn-save">Lưu</button>
-     <button id="btn-save-template" style="background: #059669; color: #fff !important; padding: 7px 16px !important;">Lưu Mẫu</button>
+      <button id="btn-save-template" style="background: #059669; color: #fff !important; padding: 7px 16px !important;">Lưu Mẫu</button>
       <div class="dropdown">
         <button id="btn-download">Tải xuống ▾</button>
         <div class="dropdown-menu hidden" id="download-menu">
@@ -311,35 +311,35 @@
             <div class="field">
               <label>Phông chữ</label>
              <select id="font-family">
-  <optgroup label="Hệ thống / Phổ biến nhất">
-    <option value="Arial, sans-serif">Arial</option>
-    <option value="Helvetica, Arial, sans-serif">Helvetica</option>
-    <option value="Roboto">Roboto</option>
-    <option value="-apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', sans-serif">San Francisco (Apple)</option>
-  </optgroup>
-  <optgroup label="Sans-Serif (Không chân)">
-    <option value="Inter">Inter</option>
-    <option value="Open Sans">Open Sans</option>
-    <option value="Lato">Lato</option>
-    <option value="Montserrat">Montserrat</option>
-    <option value="Poppins">Poppins</option>
-    <option value="Be Vietnam Pro">Be Vietnam Pro</option>
-    <option value="Nunito">Nunito</option>
-    <option value="Raleway">Raleway</option>
-    <option value="Oswald">Oswald</option>
-    <option value="Bebas Neue">Bebas Neue</option>
-    <option value="sans-serif">Sans-serif (Mặc định)</option>
-  </optgroup>
-  <optgroup label="Serif (Có chân)">
-    <option value="Playfair Display">Playfair Display</option>
-    <option value="Times New Roman, serif">Times New Roman</option>
-    <option value="serif">Serif (Mặc định)</option>
-  </optgroup>
-  <optgroup label="Script (Viết tay)">
-    <option value="Dancing Script">Dancing Script</option>
-    <option value="Lobster">Lobster</option>
-  </optgroup>
-</select>
+                <optgroup label="Hệ thống / Phổ biến nhất">
+                  <option value="Arial, sans-serif">Arial</option>
+                  <option value="Helvetica, Arial, sans-serif">Helvetica</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="-apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', sans-serif">San Francisco (Apple)</option>
+                </optgroup>
+                <optgroup label="Sans-Serif (Không chân)">
+                  <option value="Inter">Inter</option>
+                  <option value="Open Sans">Open Sans</option>
+                  <option value="Lato">Lato</option>
+                  <option value="Montserrat">Montserrat</option>
+                  <option value="Poppins">Poppins</option>
+                  <option value="Be Vietnam Pro">Be Vietnam Pro</option>
+                  <option value="Nunito">Nunito</option>
+                  <option value="Raleway">Raleway</option>
+                  <option value="Oswald">Oswald</option>
+                  <option value="Bebas Neue">Bebas Neue</option>
+                  <option value="sans-serif">Sans-serif (Mặc định)</option>
+                </optgroup>
+                <optgroup label="Serif (Có chân)">
+                  <option value="Playfair Display">Playfair Display</option>
+                  <option value="Times New Roman, serif">Times New Roman</option>
+                  <option value="serif">Serif (Mặc định)</option>
+                </optgroup>
+                <optgroup label="Script (Viết tay)">
+                  <option value="Dancing Script">Dancing Script</option>
+                  <option value="Lobster">Lobster</option>
+                </optgroup>
+              </select>
             </div>
             <div class="field">
               <label>Cỡ chữ</label>
@@ -394,8 +394,8 @@
 
 <input type="file" id="file-image" accept="image/*" style="display:none">
 
-<!-- NÚT XÓA NỔI (Thùng rác) ĐÃ ĐƯỢC THÊM LẠI -->
-<button id="floating-delete" title="Xóa (Delete)" style="position: absolute; display: none; z-index: 1000; width: 32px; height: 32px; background: #333; color: #fff; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3); cursor: pointer; align-items: center; justify-content: center;">
+<!-- NÚT XÓA NỔI (FIXED CHO MOBILE) -->
+<button id="floating-delete" title="Xóa" style="position: fixed; display: none; z-index: 9999; width: 40px; height: 40px; background: #ef4444; color: #fff; border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; align-items: center; justify-content: center; font-size: 18px; transition: transform 0.1s;">
   🗑️
 </button>
 
@@ -712,7 +712,6 @@ function initCanvas(project) {
   history = []; historyIndex = -1;
   isRestoring = true;
 
-  // HÀM XỬ LÝ LOAD DỮ LIỆU VÀ BẢO TOÀN THUỘC TÍNH
   if (project.data) {
     canvas.loadFromJSON(project.data, () => {
       
@@ -740,7 +739,6 @@ function initCanvas(project) {
 
             loadPromises.push(new Promise(resolve => {
               obj.setSrc(imgSrc, () => {
-                // Trả lại các thuộc tính đã lưu để không bị reset
                 obj.set({
                   angle: savedAngle,
                   scaleX: savedScaleX,
@@ -762,7 +760,6 @@ function initCanvas(project) {
         canvas.renderAll();
         isRestoring = false;
         
-        // Fallback render liên tục trong 1 giây để chống lỗi mạng lag
         let count = 0;
         const interval = setInterval(() => {
           canvas.renderAll();
@@ -886,35 +883,38 @@ function enableSmartGuides(c) {
 }
 
 /* ============================================================
-   LOGIC NÚT XÓA NỔI (CANVA STYLE)
+   LOGIC NÚT XÓA NỔI (FIXED CHO MOBILE)
 ============================================================ */
 const floatingDelete = document.getElementById('floating-delete');
 
-function updateFloatingDelete() {
+// Sử dụng sự kiện after:render để nút luôn bám theo vật thể khi zoom/scroll
+canvas.on('after:render', () => {
   const activeObj = canvas.getActiveObject();
   if (!activeObj || activeObj.isEditing) {
     floatingDelete.style.display = 'none';
     return;
   }
   
-  const boundingRect = activeObj.getBoundingRect(true);
-  const left = boundingRect.left + boundingRect.width + 10;
-  const top = boundingRect.top + 10;
+  // Lấy tọa độ thực tế của vùng chứa canvas trên màn hình
+  const canvasRect = canvas.upperCanvasEl.getBoundingClientRect();
+  
+  // Lấy tọa độ của vật thể (đã bao gồm zoom)
+  const objRect = activeObj.getBoundingRect(true); 
+  
+  // Tính vị trí góc trên bên phải của vật thể + khoảng cách 15px
+  const left = canvasRect.left + objRect.left + objRect.width + 15;
+  const top = canvasRect.top + objRect.top - 15;
   
   floatingDelete.style.left = `${left}px`;
   floatingDelete.style.top = `${top}px`;
   floatingDelete.style.display = 'flex';
-}
+});
 
-canvas.on('object:moving', updateFloatingDelete);
-canvas.on('object:scaling', updateFloatingDelete);
-canvas.on('object:rotating', updateFloatingDelete);
-canvas.on('selection:created', updateFloatingDelete);
-canvas.on('selection:updated', updateFloatingDelete);
-canvas.on('selection:cleared', () => floatingDelete.style.display = 'none');
-canvas.on('mouse:down', (e) => { if (!e.target) floatingDelete.style.display = 'none'; });
-
-floatingDelete.addEventListener('click', () => {
+// Bấm nút xóa
+floatingDelete.addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  
   const activeObj = canvas.getActiveObject();
   if (activeObj) {
     if (activeObj.type === 'activeSelection') {
@@ -923,11 +923,16 @@ floatingDelete.addEventListener('click', () => {
     } else {
       canvas.remove(activeObj);
     }
-    canvas.renderAll();
     floatingDelete.style.display = 'none';
+    canvas.requestRenderAll();
     saveHistory();
     markUnsaved();
   }
+});
+
+// Ẩn nút khi click ra vùng trống
+canvas.on('mouse:down', (e) => { 
+  if (!e.target) floatingDelete.style.display = 'none'; 
 });
 
 canvas.on('mouse:dblclick', (e) => {
@@ -938,7 +943,6 @@ canvas.on('mouse:dblclick', (e) => {
     toast('Đã tách nhóm!', 'success');
   }
 });
-
 
 /* ============================================================
    CÁC HÀM XỬ LÝ KHÁC
@@ -1034,7 +1038,6 @@ function applyZoom(z) {
   canvas.setDimensions({ width: currentProject.width * currentZoom, height: currentProject.height * currentZoom }); 
   canvas.renderAll();
   $('zoom-label').textContent = Math.round(currentZoom * 100) + '%';
-  updateFloatingDelete();
 }
 function fitToScreen() {
   if (!canvas || !currentProject) return;
