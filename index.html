@@ -414,6 +414,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_TQCg1LvbYL4A5OhVC3krGw_zDoaayCJ';
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+fabric.Object.prototype.objectCaching = false;
 /* ============================================================
    STATE
    ============================================================ */
@@ -708,7 +709,6 @@ function initCanvas(project) {
   el.height = project.height;
 
   // TẮT CACHE VÀ RETINA SCALING ĐỂ TRÁNH LỖI NỬA TRẮNG NỬA ĐEN
-  fabric.Object.prototype.objectCaching = false; 
 
   canvas = new fabric.Canvas('c', {
     width: project.width,
@@ -728,14 +728,21 @@ function initCanvas(project) {
    if (project.data) {
     isRestoring = true;
     canvas.loadFromJSON(project.data, () => {
-      isRestoring = false;
       
-      // 1. Duyệt qua tất cả các object
+      // 1. Xử lý ẢNH NỀN (Background Image) nếu có
+      if (canvas.backgroundImage) {
+        const bgSrc = canvas.backgroundImage.getSrc();
+        if (bgSrc) {
+          canvas.backgroundImage.setSrc(bgSrc, () => {
+            canvas.requestRenderAll();
+          }, { crossOrigin: 'anonymous' });
+        }
+      }
+
+      // 2. Xử lý các ẢNH CHÈN (Image Objects)
       canvas.getObjects().forEach(obj => {
         if (obj.type === 'image') {
-          obj.set({ objectCaching: false }); // Tắt cache ảnh
-          
-          // 2. Ép ảnh tải lại từ URL với crossOrigin để tránh lỗi CORS
+          obj.set({ objectCaching: false });
           const imgSrc = obj.getSrc();
           if (imgSrc) {
             obj.setSrc(imgSrc, () => {
@@ -745,11 +752,18 @@ function initCanvas(project) {
         }
       });
       
+      canvas.calcOffset();
       canvas.renderAll();
+      isRestoring = false;
       
-      // 3. Phòng hờ ảnh chậm: Tự động vẽ lại sau 0.5s và 1.5s
-      setTimeout(() => canvas.requestRenderAll(), 500);
-      setTimeout(() => canvas.requestRenderAll(), 1500);
+      // 3. QUAN TRỌNG: Ép Canvas tự động vẽ lại liên tục trong 2 giây đầu
+      // Để đảm bảo dù ảnh tải nhanh hay chậm thì nó cũng phải hiện ra
+      let renderCount = 0;
+      const forceRenderInterval = setInterval(() => {
+        canvas.renderAll();
+        renderCount++;
+        if (renderCount > 10) clearInterval(forceRenderInterval); // Dừng sau 10 lần (khoảng 2 giây)
+      }, 200);
       
       saveHistory();
       refreshLayers();
