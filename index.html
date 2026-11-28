@@ -725,16 +725,38 @@ function initCanvas(project) {
   isRestoring = true;
 
  
-  if (project.data) {
-    // Nếu là dự án đã lưu, load dữ liệu cũ
+   if (project.data) {
+    isRestoring = true;
     canvas.loadFromJSON(project.data, () => {
-      canvas.renderAll();
       isRestoring = false;
+      
+      // 1. Duyệt qua tất cả các object
+      canvas.getObjects().forEach(obj => {
+        if (obj.type === 'image') {
+          obj.set({ objectCaching: false }); // Tắt cache ảnh
+          
+          // 2. Ép ảnh tải lại từ URL với crossOrigin để tránh lỗi CORS
+          const imgSrc = obj.getSrc();
+          if (imgSrc) {
+            obj.setSrc(imgSrc, () => {
+              canvas.requestRenderAll();
+            }, { crossOrigin: 'anonymous' });
+          }
+        }
+      });
+      
+      canvas.renderAll();
+      
+      // 3. Phòng hờ ảnh chậm: Tự động vẽ lại sau 0.5s và 1.5s
+      setTimeout(() => canvas.requestRenderAll(), 500);
+      setTimeout(() => canvas.requestRenderAll(), 1500);
+      
       saveHistory();
       refreshLayers();
       updateObjectPanel();
     });
   } else {
+    // ... (Phần còn lại giữ nguyên)
     // Nếu là dự án MỚI TẠO, kiểm tra xem có template không
     isRestoring = false;
     if (project.name.includes('Bi') || (project.width === 828 && project.height === 1792 && project.name.includes('A'))) {
