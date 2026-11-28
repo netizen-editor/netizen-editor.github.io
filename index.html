@@ -298,6 +298,14 @@
           <button data-tab="pos" class="tab">Vị trí</button>
         </div>
         <div class="tab-content" data-tab-content="style">
+         <div class="field">
+          <label>Độ mờ: <span id="opacity-val">100</span>%</label>
+          <input type="range" id="obj-opacity" min="0" max="100" value="100">
+        </div>
+        <!-- THÊM NÚT NÀY VÀO -->
+        <div class="field">
+          <button id="btn-crop" style="width: 100%; background: #a855f7; color: white; padding: 10px; border-radius: 6px; font-weight: bold; margin-top: 8px;">✂️ Cắt Ảnh</button>
+        </div>
           <div class="field" id="field-color">
             <label>Màu</label>
             <input type="color" id="obj-color" value="#3b82f6">
@@ -519,6 +527,7 @@ sb.auth.onAuthStateChange((event, session) => {
     }
   }
 });
+
 
 /* ============================================================
    DASHBOARD
@@ -1480,6 +1489,106 @@ document.fonts.ready.then(() => { if (canvas) canvas.renderAll(); });
     toast('Lỗi lưu mẫu: ' + error.message, 'error');
   } else {
     toast('Đã lưu mẫu thành công!', 'success');
+  }
+});
+
+ /* ============================================================
+   LOGIC CẮT ẢNH (CROP) GIỐNG CANVA
+============================================================ */
+let isCropping = false;
+let cropOverlay = null;
+let imageToCrop = null;
+
+$('btn-crop').addEventListener('click', () => {
+  const o = getActive();
+  
+  // Nếu đang cắt mà bấm lần nữa -> Lưu lại
+  if (isCropping) {
+    isCropping = false;
+    $('btn-crop').innerText = '✂️ Cắt Ảnh';
+    $('btn-crop').style.background = '#a855f7';
+    
+    if (imageToCrop && cropOverlay) {
+      // Chuyển clipPath sang tương đối (để nó đi theo ảnh khi di chuyển)
+      cropOverlay.set({ absolutePositioned: false });
+      
+      // Tính toán lại tọa độ tương đối của khung cắt so với ảnh
+      const zoom = canvas.getZoom();
+      const img = imageToCrop;
+      const rect = cropOverlay;
+      
+      // Lấy góc trên cùng bên trái của ảnh và khung cắt
+      const imgBounds = img.getBoundingRect();
+      const rectBounds = rect.getBoundingRect();
+      
+      // Cập nhật lại kích thước và vị trí của clipPath (tương đối so với ảnh)
+      img.clipPath = new fabric.Rect({
+        left: (rectBounds.left - imgBounds.left) / zoom,
+        top: (rectBounds.top - imgBounds.top) / zoom,
+        width: (rectBounds.width / zoom),
+        height: (rectBounds.height / zoom),
+        originX: 'left',
+        originY: 'top',
+        absolutePositioned: false
+      });
+      
+      img.set({ selectable: true, opacity: 1 });
+      canvas.remove(cropOverlay); // Xóa khung tím
+      canvas.setActiveObject(img);
+    }
+    canvas.renderAll();
+    saveHistory();
+    markUnsaved();
+    return;
+  }
+
+  // Bắt đầu cắt
+  if (!o || o.type !== 'image') { 
+    toast('Vui lòng chọn một bức ảnh để cắt!', 'error'); 
+    return; 
+  }
+  
+  isCropping = true;
+  imageToCrop = o;
+  $('btn-crop').innerText = '✅ Lưu Cắt';
+  $('btn-crop').style.background = '#10b981'; // Đổi màu xanh
+  
+  // Làm mờ ảnh gốc
+  o.set({ selectable: false, opacity: 0.5 });
+  
+  // Tạo khung cắt màu tím
+  cropOverlay = new fabric.Rect({
+    left: o.left,
+    top: o.top,
+    width: o.width * o.scaleX,
+    height: o.height * o.scaleY,
+    originX: o.originX,
+    originY: o.originY,
+    angle: o.angle,
+    fill: 'transparent',
+    stroke: '#a855f7',
+    strokeWidth: 2,
+    strokeDashArray: [5, 5],
+    cornerColor: '#a855f7',
+    cornerStyle: 'circle',
+    absolutePositioned: true // Tạm thời để tuyệt đối để dễ kéo thả
+  });
+  
+  o.set({ clipPath: cropOverlay }); // Gắn khung vào ảnh để xem trước
+  
+  canvas.add(cropOverlay);
+  canvas.setActiveObject(cropOverlay);
+  canvas.renderAll();
+});
+
+// Tự động cập nhật khung cắt nếu người dùng di chuyển ảnh (khi đang cắt)
+canvas.on('object:moving', (e) => {
+  if (isCropping && e.target === imageToCrop && cropOverlay) {
+    cropOverlay.set({
+      left: e.target.left,
+      top: e.target.top,
+      angle: e.target.angle
+    });
   }
 });
 </script>
