@@ -12,8 +12,8 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { font-family: 'Inter', sans-serif; background: #f8f9fa; color: #1f2937; height: 100vh; overflow: hidden; }
-  button { cursor: pointer; font-family: inherit; border: none; background: none; }
-  input, select { font-family: inherit; }
+  button { cursor: pointer; font-family: inherit; border: none; background: none; touch-action: manipulation; }
+  input, select { font-family: inherit; touch-action: manipulation; }
   .hidden { display: none !important; }
   .screen { height: 100vh; overflow: hidden; }
 
@@ -21,9 +21,10 @@
   #screen-loading, #screen-auth {
     display: flex; align-items: center; justify-content: center;
     background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    padding: 16px;
   }
   #screen-loading { color: #fff; font-size: 18px; }
-  .auth-card { background: #fff; padding: 40px; border-radius: 14px; width: 400px; max-width: 90vw;
+  .auth-card { background: #fff; padding: 30px; border-radius: 14px; width: 400px; max-width: 100%;
     box-shadow: 0 20px 60px rgba(0,0,0,.25); }
   .auth-card h1 { font-size: 24px; color: #4f46e5; margin-bottom: 6px; text-align: center; }
   .auth-card .sub { color: #6b7280; font-size: 13px; text-align: center; margin-bottom: 24px; }
@@ -34,21 +35,21 @@
     border-radius: 8px; font-weight: 600; font-size: 14px; }
   .auth-card button:hover { background: #4338ca; }
   .auth-card button:disabled { opacity: .5; cursor: default; }
-  #auth-msg { font-size: 13px; text-align: center; margin-top: 14px; min-height: 20px; color: #059669; }
+  #auth-msg { font-size: 13px; text-align: center; margin-top: 14px; min-height: 20px; color: #059669; word-break: break-word; }
   #auth-msg.error { color: #dc2626; }
 
   /* Dashboard */
   #screen-dashboard { overflow-y: auto; }
-  #screen-dashboard header { display: flex; justify-content: space-between; align-items: center;
-    padding: 16px 32px; background: #fff; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 5; }
+  #screen-dashboard header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+    padding: 16px 32px; background: #fff; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 5; gap: 12px; }
   #screen-dashboard h1 { font-size: 20px; color: #4f46e5; }
-  .header-right { display: flex; align-items: center; gap: 12px; }
-  #user-email { font-size: 13px; color: #6b7280; }
+  .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  #user-email { font-size: 13px; color: #6b7280; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #btn-logout { padding: 7px 14px; border-radius: 6px; font-size: 13px;
-    color: #6b7280; border: 1px solid #d1d5db; }
+    color: #6b7280; border: 1px solid #d1d5db; background: #fff;}
   #btn-logout:hover { background: #f3f4f6; }
   #btn-new-project { background: #4f46e5; color: #fff; padding: 9px 18px;
-    border-radius: 8px; font-weight: 600; font-size: 14px; }
+    border-radius: 8px; font-weight: 600; font-size: 14px; white-space: nowrap; }
   #btn-new-project:hover { background: #4338ca; }
   #dashboard-main { padding: 24px 32px; }
   #project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
@@ -70,15 +71,16 @@
 
   /* Modal */
   .modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex;
-    align-items: center; justify-content: center; z-index: 100; }
-  .modal-content { background: #fff; border-radius: 12px; padding: 28px;
-    width: 640px; max-width: 92vw; max-height: 90vh; overflow-y: auto; }
+    align-items: center; justify-content: center; z-index: 100; padding: 16px;}
+  .modal-content { background: #fff; border-radius: 12px; padding: 24px;
+    width: 640px; max-width: 100%; max-height: 90vh; overflow-y: auto; }
   .modal-content h2 { margin-bottom: 16px; font-size: 20px; }
   .modal-content label { display: block; font-size: 13px; font-weight: 600;
     color: #4b5563; margin: 14px 0 6px; }
   .modal-content input[type=text], .modal-content input[type=number] {
     width: 100%; padding: 9px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
   .size-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  @media(max-width: 500px) { .size-grid { grid-template-columns: repeat(2, 1fr); } }
   .size-btn { padding: 14px 8px; border: 2px solid #e5e7eb; border-radius: 8px;
     background: #fff; text-align: center; font-size: 12px; color: #4b5563; }
   .size-btn:hover { border-color: #a5b4fc; }
@@ -96,7 +98,7 @@
   /* Workspace */
   #screen-workspace { display: flex; flex-direction: column; }
   .workspace-header { height: 54px; background: #fff; border-bottom: 1px solid #e5e7eb;
-    display: flex; align-items: center; justify-content: space-between; padding: 0 12px; gap: 12px; }
+    display: flex; align-items: center; justify-content: space-between; padding: 0 12px; gap: 12px; z-index: 20;}
   .workspace-header .left, .workspace-header .center, .workspace-header .right {
     display: flex; align-items: center; gap: 8px; }
   .workspace-header button { padding: 6px 10px; border-radius: 6px; color: #4b5563; font-size: 14px; }
@@ -108,12 +110,15 @@
   #save-status { font-size: 12px; color: #6b7280; margin-left: 4px; display: none; }
   .sep { color: #d1d5db; }
   #zoom-label { min-width: 46px; text-align: center; font-size: 12px; color: #6b7280; }
-  #btn-save, #btn-download { background: #4f46e5; color: #fff !important; padding: 7px 16px !important; }
-  #btn-save:hover, #btn-download:hover { background: #4338ca; }
+  #btn-save, #btn-download, #btn-save-template { background: #4f46e5; color: #fff !important; padding: 7px 16px !important; border-radius: 6px; }
+  #btn-save:hover, #btn-download:hover, #btn-save-template:hover { background: #4338ca; }
+  #btn-save-template { background: #059669; }
+  #btn-save-template:hover { background: #047857; }
+  
   .dropdown { position: relative; }
   .dropdown-menu { position: absolute; top: 100%; right: 0; margin-top: 4px; background: #fff;
     border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,.1);
-    min-width: 220px; z-index: 20; padding: 4px; }
+    min-width: 220px; z-index: 100; padding: 4px; }
   .dropdown-menu button { display: block; width: 100%; text-align: left; padding: 8px 12px;
     font-size: 13px; border-radius: 4px; color: #374151 !important; }
   .dropdown-menu button:hover { background: #f3f4f6; }
@@ -128,13 +133,17 @@
   .left-tools button:hover { background: #f3f4f6; }
   
   .canvas-area { flex: 1; background: #e5e7eb; display: flex; overflow: hidden; }
-  #canvas-scroll { flex: 1; overflow: auto; display: flex; background: #e5e7eb; }
+  #canvas-scroll { flex: 1; overflow: auto; display: flex; background: #e5e7eb; overscroll-behavior: contain; }
   #canvas-inner { margin: auto; padding: 40px; }
   #canvas-wrap { box-shadow: 0 4px 18px rgba(0,0,0,.12); background: #fff; }
   #c { display: block; }
 
   .right-panel { width: 300px; background: #fff; border-left: 1px solid #e5e7eb;
     display: flex; flex-direction: column; overflow: hidden; z-index: 15; }
+  
+  /* Thêm Header cho Mobile Panel */
+  .panel-mobile-header { display: none; }
+
   #panel-empty, #panel-object { padding: 14px; overflow-y: auto; max-height: 62vh; }
   #panel-empty p { font-size: 13px; color: #9ca3af; text-align: center; margin: 20px 0; }
   .field { margin-bottom: 12px; }
@@ -144,8 +153,8 @@
   .field input[type=number], .field select { width: 100%; padding: 7px 10px;
     border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; }
   .field input[type=range] { width: 100%; }
-  .btn-group { display: flex; gap: 4px; }
-  .btn-group button { flex: 1; padding: 7px; border: 1px solid #d1d5db; border-radius: 6px;
+  .btn-group { display: flex; gap: 4px; flex-wrap: wrap; }
+  .btn-group button { flex: 1; min-width: 40px; padding: 7px; border: 1px solid #d1d5db; border-radius: 6px;
     font-size: 13px; background: #fff; color: #374151; }
   .btn-group button:hover { background: #f9fafb; }
   .btn-group button.active { background: #eef2ff; border-color: #4f46e5; color: #4338ca; }
@@ -173,7 +182,7 @@
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: #1f2937; color: #fff; padding: 11px 20px; border-radius: 8px;
     font-size: 14px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,.2);
-    animation: slideUp .25s ease; max-width: 90vw; pointer-events: none; }
+    animation: slideUp .25s ease; max-width: 90vw; pointer-events: none; text-align: center;}
   .toast.error { background: #dc2626; }
   .toast.success { background: #059669; }
   @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 20px); }
@@ -192,16 +201,27 @@
      RESPONSIVE CHO MOBILE & TABLET
      ========================================== */
   @media (max-width: 768px) {
-    /* Header */
-    .workspace-header { padding: 0 8px; gap: 4px; }
-    #project-name-input { width: 100px; font-size: 13px; }
-    .workspace-header .center button { padding: 6px; font-size: 16px; }
+    /* Dashboard Mobile */
+    #screen-dashboard header { flex-direction: column; align-items: flex-start; padding: 12px 16px; }
+    .header-right { width: 100%; justify-content: space-between; }
+    #user-email { max-width: 130px; }
+    #dashboard-main { padding: 16px; }
+    #project-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+
+    /* Workspace Header Mobile */
+    .workspace-header { height: auto; padding: 8px; flex-wrap: wrap; gap: 8px; }
+    .workspace-header .left { flex: 1; width: 100%; justify-content: space-between; }
+    #project-name-input { width: 140px; font-size: 13px; }
+    .workspace-header .center { flex: 1; justify-content: flex-start; border-top: 1px solid #f3f4f6; padding-top: 8px; margin-top: 4px; }
+    .workspace-header .center button { padding: 6px 8px; font-size: 16px; }
     .workspace-header .center span { display: none; } /* Ẩn chữ Vừa màn hình, zoom % */
-    #btn-save, #btn-download { padding: 6px 10px !important; font-size: 13px; }
-    .right .dropdown { display: none; } /* Ẩn bớt nút tải xuống trên mobile cho đỡ chật, hoặc giữ tùy bạn */
+    #zoom-label { min-width: 36px; }
+    .workspace-header .right { flex-wrap: wrap; justify-content: flex-end;}
+    #btn-save, #btn-save-template, #btn-download { padding: 6px 10px !important; font-size: 13px; }
+    .dropdown { display: none; } /* Ẩn bớt nút tải xuống trên mobile cho đỡ chật, hoặc giữ tùy bạn */
     
     /* Hiện nút Toggle Panel */
-    #btn-toggle-panel { display: flex; align-items: center; justify-content: center; }
+    #btn-toggle-panel { display: flex; align-items: center; justify-content: center; background: #eef2ff; color: #4f46e5 !important; padding: 6px 12px; border-radius: 6px;}
 
     /* Main Layout */
     .workspace-main { flex-direction: column; }
@@ -209,47 +229,35 @@
     /* Thanh công cụ chuyển xuống dưới */
     .left-tools { 
       width: 100%; height: 60px; flex-direction: row; border-right: none; 
-      border-top: 1px solid #e5e7eb; padding: 0; overflow-x: auto; justify-content: flex-start; 
-      padding: 0 10px; gap: 4px; flex-shrink: 0;
+      border-top: 1px solid #e5e7eb; padding: 0 10px; overflow-x: auto; justify-content: flex-start; 
+      gap: 4px; flex-shrink: 0; z-index: 20;
+      padding-bottom: env(safe-area-inset-bottom, 0px); /* Hỗ trợ iPhone tai thỏ */
     }
-    .left-tools button { width: 40px; height: 40px; flex-shrink: 0; font-size: 18px; }
+    .left-tools button { width: 44px; height: 44px; flex-shrink: 0; font-size: 18px; }
     
     /* Vùng Canvas tự co giãn */
-    .canvas-area { height: calc(100vh - 54px - 60px); }
-    #canvas-inner { padding: 15px; } /* Giảm padding cho rộng rãi */
+    .canvas-area { height: calc(100vh - 60px - 60px - env(safe-area-inset-bottom, 0px)); }
+    #canvas-inner { padding: 15px; } 
 
     /* Bảng điều khiển bên phải trượt từ cạnh phải */
     .right-panel {
-      position: absolute;
-      right: -100%;
-      top: 0;
-      bottom: 0;
-      width: 280px;
+      position: absolute; right: -100%; top: 0; bottom: 0;
+      width: 85vw; max-width: 320px;
       transition: right 0.3s ease;
       box-shadow: -4px 0 15px rgba(0,0,0,0.1);
       z-index: 50;
     }
     .right-panel.open { right: 0; }
-    .right-panel::before {
-      content: '✕';
-      position: absolute;
-      top: 10px;
-      left: -40px;
-      width: 40px;
-      height: 40px;
-      background: #fff;
-      color: #333;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px 0 0 8px;
-      box-shadow: -4px 0 15px rgba(0,0,0,0.1);
-      cursor: pointer;
-      font-size: 18px;
-      z-index: 55;
+    
+    /* Header của Panel trên mobile */
+    .panel-mobile-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 14px; border-bottom: 1px solid #e5e7eb; font-weight: 600; font-size: 15px;
+      background: #f9fafb;
     }
-    /* Khi click nút X để đóng */
-    .right-panel.open::before { content: '✕'; }
+    #btn-close-panel { font-size: 18px; color: #6b7280; padding: 4px 8px; }
+    
+    #panel-empty, #panel-object { max-height: calc(100vh - 150px); }
   }
 </style>
 </head>
@@ -276,8 +284,10 @@
     <h1>Netizen Editor</h1>
     <div class="header-right">
       <span id="user-email"></span>
-      <button id="btn-logout">Đăng xuất</button>
-      <button id="btn-new-project">+ Tạo mới</button>
+      <div style="display:flex; gap:8px;">
+        <button id="btn-logout">Đăng xuất</button>
+        <button id="btn-new-project">+ Tạo mới</button>
+      </div>
     </div>
   </header>
   <main id="dashboard-main">
@@ -326,7 +336,7 @@
     </div>
     <div class="right">
       <button id="btn-save">Lưu</button>
-      <button id="btn-save-template" style="background: #059669; color: #fff !important; padding: 7px 16px !important;">Lưu Mẫu</button>
+      <button id="btn-save-template">Lưu Mẫu</button>
       <div class="dropdown">
         <button id="btn-download">Tải xuống ▾</button>
         <div class="dropdown-menu hidden" id="download-menu">
@@ -336,7 +346,7 @@
         </div>
       </div>
       <!-- Nút mở Panel trên Mobile -->
-      <button id="btn-toggle-panel" title="Bảng điều khiển">⚙️</button>
+      <button id="btn-toggle-panel" title="Bảng điều khiển">⚙️ Công cụ</button>
     </div>
   </header>
   
@@ -362,6 +372,12 @@
     
     <!-- Right Panel (Chứa các thuộc tính) -->
     <aside class="right-panel" id="right-panel">
+      <!-- Mobile Panel Header -->
+      <div class="panel-mobile-header">
+        <span>Thuộc tính</span>
+        <button id="btn-close-panel">✕</button>
+      </div>
+
       <div id="panel-empty">
         <p>Chọn đối tượng để chỉnh sửa</p>
         <div class="field">
@@ -548,16 +564,13 @@ function hideAll() {
 }
 
 /* ============================================================
-   MOBILE PANEL TOGGLE
+   MOBILE PANEL TOGGLE (Đã sửa lại dùng nút Close thực thụ)
 ============================================================ */
 $('btn-toggle-panel').addEventListener('click', () => {
-  $('right-panel').classList.toggle('open');
+  $('right-panel').classList.add('open');
 });
-$('right-panel').addEventListener('click', (e) => {
-  // Nếu click vào vùng trống của panel (không phải nút bấm) và panel đang mở trên mobile
-  if (e.target.id === 'right-panel' || e.target === $('right-panel')) {
-    $('right-panel').classList.remove('open');
-  }
+$('btn-close-panel').addEventListener('click', () => {
+  $('right-panel').classList.remove('open');
 });
 
 /* ============================================================
@@ -605,6 +618,7 @@ sb.auth.onAuthStateChange((event, session) => {
   if (currentUser) {
     if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
       $('user-email').textContent = currentUser.email || '';
+      $('user-email').title = currentUser.email || '';
       showDashboard();
     }
   } else {
@@ -831,7 +845,7 @@ function initCanvas(project) {
         canvas.renderAll();
         isRestoring = false;
         saveHistory(); refreshLayers(); updateObjectPanel();
-        updateFloatingDelete(); // Cập nhật nút xóa
+        updateFloatingDelete();
       });
     });
   } else {
@@ -851,7 +865,6 @@ function initCanvas(project) {
   canvas.on('selection:updated', () => { updateObjectPanel(); refreshLayers(); updateFloatingDelete(); });
   canvas.on('selection:cleared', () => { updateObjectPanel(); refreshLayers(); $('floating-delete').style.display = 'none'; });
   
-  // Cập nhật vị trí nút xóa khi tương tác
   canvas.on('object:moving', updateFloatingDelete);
   canvas.on('object:scaling', updateFloatingDelete);
   canvas.on('object:rotating', updateFloatingDelete);
@@ -861,7 +874,6 @@ function initCanvas(project) {
     updateFloatingDelete();
   });
   
-  // Cập nhật nút xóa khi cuộn canvas (trên mobile rất quan trọng)
   $('canvas-scroll').addEventListener('scroll', updateFloatingDelete);
 
   canvas.on('mouse:wheel', function(opt) {
@@ -965,7 +977,7 @@ function enableSmartGuides(c) {
 }
 
 /* ============================================================
-   LOGIC NÚT XÓA NỔI
+   LOGIC NÚT XÓA NỔI (Đã tối ưu lại tọa độ)
 ============================================================ */
 const floatingDelete = document.getElementById('floating-delete');
 
@@ -976,18 +988,26 @@ function updateFloatingDelete() {
     return;
   }
 
-  // Lấy tọa độ của góc trên bên phải của object (đã tính cả zoom & xoay)
+  // Lấy tọa độ góc trên bên phải của object (đã tính cả zoom)
   const coords = activeObj.oCoords.tr; 
   
   // Lấy vị trí thực tế của canvas trên màn hình
   const canvasRect = canvas.upperCanvasEl.getBoundingClientRect();
 
-  // Tính vị trí cho nút xóa (thêm 10px lề)
+  // Tính vị trí hiển thị (canvasRect.left bao gồm cả scroll của window)
   const left = canvasRect.left + coords.x + 10;
-  const top = canvasRect.top + coords.y - 10;
+  const top = canvasRect.top + coords.y - 18;
 
-  floatingDelete.style.left = `${left}px`;
-  floatingDelete.style.top = `${top}px`;
+  // Nếu object ở quá cao, đặt nút xóa bên dưới object một chút để không bị khuất
+  if (top < 60) {
+    const bottomCoords = activeObj.oCoords.br;
+    floatingDelete.style.top = `${canvasRect.top + bottomCoords.y + 10}px`;
+    floatingDelete.style.left = `${canvasRect.left + bottomCoords.x - 18}px`;
+  } else {
+    floatingDelete.style.left = `${left}px`;
+    floatingDelete.style.top = `${top}px`;
+  }
+
   floatingDelete.style.display = 'flex';
 }
 
@@ -1007,10 +1027,10 @@ floatingDelete.addEventListener('click', (e) => {
     saveHistory();
     markUnsaved();
     updateObjectPanel();
+    refreshLayers();
   }
 });
 
-// Sự kiện double click để tách nhóm
 canvas.on('mouse:dblclick', (e) => {
   const obj = e.target;
   if (obj && obj.type === 'group') {
@@ -1080,6 +1100,7 @@ function updateUndoRedo() {
 function markUnsaved() {
   dirty = true;
   $('save-status').textContent = 'Chưa lưu...';
+  $('save-status').style.display = 'inline';
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => saveCurrentProject(true), 2000);
 }
@@ -1091,6 +1112,7 @@ async function saveCurrentProject(silent = false) {
   const name = $('project-name-input').value.trim() || currentProject.name;
   const background = (typeof canvas.backgroundColor === 'string') ? canvas.backgroundColor : '#ffffff';
   $('save-status').textContent = 'Đang lưu...';
+  $('save-status').style.display = 'inline';
 
   const { error } = await sb.from('projects').update({ name, background, data: json, updated_at: new Date().toISOString() }).eq('id', currentProject.id);
   if (error) {
@@ -1100,7 +1122,7 @@ async function saveCurrentProject(silent = false) {
   }
   currentProject.name = name; currentProject.background = background; dirty = false;
   $('save-status').textContent = 'Đã lưu ✓';
-  setTimeout(() => { if (!dirty) $('save-status').textContent = ''; }, 1500);
+  setTimeout(() => { if (!dirty) { $('save-status').textContent = ''; $('save-status').style.display = 'none'; } }, 1500);
 }
 
 $('btn-save').addEventListener('click', () => saveCurrentProject(false));
@@ -1118,7 +1140,7 @@ function applyZoom(z) {
 function fitToScreen() {
   if (!canvas || !currentProject) return;
   const scroll = $('canvas-scroll');
-  const aw = scroll.clientWidth - 60, ah = scroll.clientHeight - 60;
+  const aw = scroll.clientWidth - 40, ah = scroll.clientHeight - 40;
   if (aw <= 0 || ah <= 0) return;
   applyZoom(Math.min(aw / currentProject.width, ah / currentProject.height, 1));
 }
@@ -1134,6 +1156,7 @@ function addText() {
     fontSize: 40, fontFamily: 'Inter', fill: '#1f2937', width: 400, textAlign: 'center', splitByGrapheme: true
   });
   canvas.add(t); canvas.setActiveObject(t); canvas.renderAll();
+  saveHistory(); markUnsaved();
 }
 
 function getStarPoints(spikes, outerR, innerR) {
@@ -1155,7 +1178,7 @@ function addShape(type) {
   else if (type === 'triangle') shape = new fabric.Triangle({ ...opts, width: 200, height: 180 });
   else if (type === 'star') shape = new fabric.Polygon(getStarPoints(5, 110, 48), { ...opts });
   else if (type === 'line') shape = new fabric.Line([cx - 120, cy, cx + 120, cy], { stroke: '#1f2937', strokeWidth: 4 });
-  if (shape) { canvas.add(shape); canvas.setActiveObject(shape); canvas.renderAll(); }
+  if (shape) { canvas.add(shape); canvas.setActiveObject(shape); canvas.renderAll(); saveHistory(); markUnsaved(); }
 }
 
 function addStatusBar() {
@@ -1178,6 +1201,7 @@ function addStatusBar() {
     left: canvas.getWidth() / 2, top: canvas.getHeight() / 2, originX: 'center', originY: 'center', name: 'Thanh trạng thái'
   });
   canvas.add(statusGroup); canvas.setActiveObject(statusGroup); canvas.renderAll();
+  saveHistory(); markUnsaved();
 }
 
 document.querySelectorAll('.left-tools button').forEach(b => {
@@ -1195,7 +1219,7 @@ $('file-image').addEventListener('change', async (e) => {
   e.target.value = '';
   if (!file) return;
   const uploadBtn = document.querySelector('.left-tools button[data-tool="image"]');
-  uploadBtn.classList.add('uploading');
+  uploadBtn.style.opacity = '0.5';
   toast('Đang tải ảnh lên...');
   try {
     const publicUrl = await uploadImageToStorage(file);
@@ -1204,7 +1228,7 @@ $('file-image').addEventListener('change', async (e) => {
   } catch (err) {
     toast('Lỗi upload: ' + err.message, 'error');
   } finally {
-    uploadBtn.classList.remove('uploading');
+    uploadBtn.style.opacity = '1';
   }
 });
 
@@ -1225,7 +1249,9 @@ function addImageToCanvas(url) {
       const maxW = canvas.getWidth() * 0.6, maxH = canvas.getHeight() * 0.6;
       const s = Math.min(maxW / img.width, maxH / img.height, 1);
       img.set({ scaleX: s, scaleY: s, left: canvas.getWidth() / 2, top: canvas.getHeight() / 2, originX: 'center', originY: 'center' });
-      canvas.add(img); canvas.setActiveObject(img); canvas.renderAll(); resolve();
+      canvas.add(img); canvas.setActiveObject(img); canvas.renderAll(); 
+      saveHistory(); markUnsaved();
+      resolve();
     }, { crossOrigin: 'anonymous' });
   });
 }
@@ -1355,12 +1381,14 @@ $('btn-duplicate').addEventListener('click', () => {
   o.clone(c => {
     c.set({ left: (o.left || 0) + 24, top: (o.top || 0) + 24 });
     canvas.add(c); canvas.setActiveObject(c); canvas.renderAll();
+    saveHistory(); markUnsaved();
   });
 });
 $('btn-delete').addEventListener('click', () => {
   const o = getActive(); if (!o) return;
   canvas.remove(o); canvas.discardActiveObject(); canvas.renderAll();
   floatingDelete.style.display = 'none';
+  saveHistory(); markUnsaved(); refreshLayers();
 });
 
 function refreshLayers() {
@@ -1392,7 +1420,7 @@ function refreshLayers() {
     });
     div.querySelector('.layer-del').addEventListener('click', (e) => {
       e.stopPropagation();
-      canvas.remove(obj); canvas.renderAll();
+      canvas.remove(obj); canvas.renderAll(); saveHistory(); markUnsaved();
     });
     list.appendChild(div);
   }
@@ -1450,6 +1478,7 @@ document.addEventListener('keydown', (e) => {
       } else canvas.remove(active);
       canvas.renderAll();
       floatingDelete.style.display = 'none';
+      saveHistory(); markUnsaved(); refreshLayers();
       e.preventDefault();
     }
   } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
