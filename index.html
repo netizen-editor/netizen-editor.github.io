@@ -253,6 +253,7 @@
     </div>
     <div class="right">
       <button id="btn-save">Lưu</button>
+     <button id="btn-save-template" style="background: #059669; color: #fff !important; padding: 7px 16px !important;">Lưu Mẫu</button>
       <div class="dropdown">
         <button id="btn-download">Tải xuống ▾</button>
         <div class="dropdown-menu hidden" id="download-menu">
@@ -420,8 +421,8 @@ const SIZE_PRESETS = [
   { name: 'Twitter Post', w: 1024, h: 512 },
  
   // === BẠN THÊM CÁC MỤC MỚI TỪ ĐÂY ===
-  { name: 'Bill Agribank', w: 828, h: 1792 },
-  { name: 'Bill VietComBank', w: 1080, h: 2400 },
+  { name: 'BiA', w: 828, h: 1792, template: 'bia-template' },
+  { name: 'BiV', w: 1080, h: 2400, template: 'biv-template' },
   { name: 'Cover Facebook', w: 851, h: 315 }
 ];
 
@@ -621,9 +622,32 @@ $('btn-create-new').addEventListener('click', async () => {
 
   $('btn-create-new').disabled = true;
 
+  // 1. Tìm xem người dùng có chọn mẫu nào không (dựa vào tên)
+  const selectedPreset = SIZE_PRESETS.find(s => s.w === w && s.h === h && s.name.includes(name));
+  let templateData = null;
+
+  if (selectedPreset && selectedPreset.templateDb) {
+    // 2. Nếu có, tải mẫu từ Database về
+    const { data: tpl } = await sb.from('templates')
+      .select('data')
+      .eq('name', selectedPreset.templateDb)
+      .single();
+      
+    if (tpl && tpl.data) {
+      templateData = tpl.data;
+    }
+  }
+
+  // 3. Tạo dự án với dữ liệu mẫu (nếu có)
   const { data, error } = await sb
     .from('projects')
-    .insert({ name, width: w, height: h, user_id: currentUser.id })
+    .insert({ 
+      name, 
+      width: w, 
+      height: h, 
+      user_id: currentUser.id,
+      data: templateData // Nhét dữ liệu mẫu vào đây
+    })
     .select()
     .single();
 
@@ -634,7 +658,6 @@ $('btn-create-new').addEventListener('click', async () => {
   $('modal-new').classList.add('hidden');
   await openProject(data.id);
 });
-
 /* ============================================================
    OPEN PROJECT
 ============================================================ */
@@ -689,7 +712,9 @@ function initCanvas(project) {
   history = []; historyIndex = -1;
   isRestoring = true;
 
+ 
   if (project.data) {
+    // Nếu là dự án đã lưu, load dữ liệu cũ
     canvas.loadFromJSON(project.data, () => {
       canvas.renderAll();
       isRestoring = false;
@@ -698,10 +723,14 @@ function initCanvas(project) {
       updateObjectPanel();
     });
   } else {
+    // Nếu là dự án MỚI TẠO, kiểm tra xem có template không
     isRestoring = false;
-    saveHistory();
+    if (project.name.includes('Bi') || (project.width === 828 && project.height === 1792 && project.name.includes('A'))) {
+      applyTikTokTemplate();
+    } else {
+      saveHistory(); // Nếu không có template thì tạo canvas trống
+    }
   }
-
   requestAnimationFrame(fitToScreen);
   setTimeout(fitToScreen, 100);
 
@@ -713,6 +742,88 @@ function initCanvas(project) {
   canvas.on('selection:cleared', () => { updateObjectPanel(); refreshLayers(); });
 }
 
+ function applyTikTokTemplate() {
+  // 1. TẠO ẢNH NỀN (Bị khóa cứng, không thể sửa/xóa)
+  // DÁN LINK ẢNH SUPABASE CỦA BẠN VÀO ĐÂY
+  const bgUrl = 'https://hltrwkihjihjfkweinqo.supabase.co/storage/v1/object/public/design-assets/tiktok-bg.jpg'; 
+  
+  fabric.Image.fromURL(bgUrl, (img) => {
+    // Tính toán để ảnh phủ kín canvas (cover)
+    const scale = Math.max(canvas.getWidth() / img.width, canvas.getHeight() / img.height);
+    img.set({
+      scaleX: scale,
+      scaleY: scale,
+      originX: 'center',
+      originY: 'center',
+      left: canvas.getWidth() / 2,
+      top: canvas.getHeight() / 2,
+      selectable: false, // KHÓA: Không thể click chọn
+      evented: false,    // KHÓA: Không nhận sự kiện chuột
+      hoverCursor: 'default'
+    });
+    
+    // Gán làm ảnh nền của Canvas
+    canvas.setBackgroundImage(img, () => {
+      canvas.renderAll();
+      // Lưu lại lịch sử sau khi đã load xong ảnh nền
+      saveHistory(); 
+    });
+  }, { crossOrigin: 'anonymous' });
+
+  // 2. TẠO CHỮ (Có thể sửa được bình thường)
+  const titleText = new fabric.Textbox('Nhập tiêu đề video của bạn', {
+    left: canvas.getWidth() / 2,
+    top: canvas.getHeight() - 500, // Cách đáy 500px
+    originX: 'center',
+    fontFamily: 'Inter',
+    fontSize: 80,
+    fontWeight: 'bold',
+    fill: '#ffffff',
+    textAlign: 'center',
+    width: 900,
+    shadow: 'rgba(0,0,0,0.8) 0px 4px 15px', // Đổ bóng đen để chữ nổi bật trên nền
+    splitByGrapheme: true,
+    objectCaching: false
+  });
+
+  // 3. TẠO NÚT BẤM (Có thể sửa được)
+  const btnBg = new fabric.Rect({
+    width: 400,
+    height: 110,
+    fill: '#ff0050', // Màu đỏ TikTok
+    rx: 55, ry: 55,  // Bo góc tròn
+    left: canvas.getWidth() / 2,
+    top: canvas.getHeight() - 250, // Cách đáy 250px
+    originX: 'center',
+    originY: 'center',
+    shadow: 'rgba(0,0,0,0.5) 0px 4px 10px'
+  });
+
+  const btnText = new fabric.Textbox('Theo dõi ngay', {
+    left: canvas.getWidth() / 2,
+    top: canvas.getHeight() - 250,
+    originX: 'center',
+    originY: 'center',
+    fontFamily: 'Inter',
+    fontSize: 45,
+    fontWeight: 'bold',
+    fill: '#ffffff',
+    textAlign: 'center',
+    width: 400,
+    splitByGrapheme: true,
+    objectCaching: false
+  });
+
+  // Thêm chữ và nút vào Canvas (Ảnh nền đã nằm dưới cùng rồi)
+  canvas.add(titleText);
+  canvas.add(btnBg);
+  canvas.add(btnText);
+  
+  // Đặt lịch sử (Undo/Redo)
+  canvas.renderAll();
+  saveHistory();
+  markUnsaved();
+}
 // Hàm vẽ đường căn lề tự động
 function enableSmartGuides(c) {
   const ctx = c.contextTop;
@@ -1334,6 +1445,40 @@ window.addEventListener('beforeunload', (e) => {
 });
 
 document.fonts.ready.then(() => { if (canvas) canvas.renderAll(); });
+
+ $('btn-save-template').addEventListener('click', async () => {
+  if (!currentProject || !canvas) return;
+
+  // Chỉ cho phép tài khoản của bạn lưu mẫu (để bảo mật)
+  if (currentUser.email !== 'icloud.ngdachao@gmail.com') { // <-- THAY EMAIL CỦA BẠN
+    toast('Bạn không có quyền lưu mẫu!', 'error');
+    return;
+  }
+
+  const tplName = prompt('Nhập tên mẫu (VD: TikTok Template):', 'TikTok Template');
+  if (!tplName) return;
+
+  toast('Đang lưu mẫu...');
+
+  // Xử lý khóa ảnh nền: 
+  // (Nếu bạn muốn thành phần nào không cho user sửa, hãy chọn nó và bấm nút "Khóa" ở panel bên phải, hoặc set code).
+  // Trong Fabric.js, object nào có selectable: false và evented: false sẽ bị khóa cứng.
+  
+  const json = canvas.toJSON(['id', 'name']);
+  
+  const { error } = await sb.from('templates').insert({
+    name: tplName,
+    width: currentProject.width,
+    height: currentProject.height,
+    data: json
+  });
+
+  if (error) {
+    toast('Lỗi lưu mẫu: ' + error.message, 'error');
+  } else {
+    toast('Đã lưu mẫu thành công!', 'success');
+  }
+});
 </script>
 </body>
 </html>
