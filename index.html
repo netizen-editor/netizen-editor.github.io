@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Lato:wght@400;700&family=Montserrat:wght@400;700&family=Poppins:wght@400;700&family=Be+Vietnam+Pro:wght@400;600;700&family=Nunito:wght@400;700&family=Raleway:wght@400;700&family=Playfair+Display:wght@400;700&family=Oswald:wght@400;700&family=Bebas+Neue&family=Dancing+Script:wght@400;700&family=Lobster&display=swap" rel="stylesheet">
-<!-- Thư viện Fabric.js quan trọng bắt buộc phải có -->
 <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -273,7 +272,6 @@
       <button data-tool="triangle" title="Tam giác">△</button>
       <button data-tool="star" title="Ngôi sao">☆</button>
       <button data-tool="line" title="Đường kẻ">╱</button>
-      <!-- NÚT THANH TRẠNG THÁI -->
       <button data-tool="statusbar" title="Thanh trạng thái (Sóng, Wifi, Pin)">📱</button>
     </aside>
     <section class="canvas-area">
@@ -302,7 +300,6 @@
           <label>Độ mờ: <span id="opacity-val">100</span>%</label>
           <input type="range" id="obj-opacity" min="0" max="100" value="100">
         </div>
-        <!-- THÊM NÚT NÀY VÀO -->
         <div class="field">
           <button id="btn-crop" style="width: 100%; background: #a855f7; color: white; padding: 10px; border-radius: 6px; font-weight: bold; margin-top: 8px;">✂️ Cắt Ảnh</button>
         </div>
@@ -318,10 +315,8 @@
     <option value="Arial, sans-serif">Arial</option>
     <option value="Helvetica, Arial, sans-serif">Helvetica</option>
     <option value="Roboto">Roboto</option>
-    <!-- San Francisco (Apple System Font) -->
     <option value="-apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', sans-serif">San Francisco (Apple)</option>
   </optgroup>
-  
   <optgroup label="Sans-Serif (Không chân)">
     <option value="Inter">Inter</option>
     <option value="Open Sans">Open Sans</option>
@@ -335,13 +330,11 @@
     <option value="Bebas Neue">Bebas Neue</option>
     <option value="sans-serif">Sans-serif (Mặc định)</option>
   </optgroup>
-  
   <optgroup label="Serif (Có chân)">
     <option value="Playfair Display">Playfair Display</option>
     <option value="Times New Roman, serif">Times New Roman</option>
     <option value="serif">Serif (Mặc định)</option>
   </optgroup>
-  
   <optgroup label="Script (Viết tay)">
     <option value="Dancing Script">Dancing Script</option>
     <option value="Lobster">Lobster</option>
@@ -369,10 +362,6 @@
                 <button data-align="justify">≡</button>
               </div>
             </div>
-          </div>
-          <div class="field">
-            <label>Độ mờ: <span id="opacity-val">100</span>%</label>
-            <input type="range" id="obj-opacity" min="0" max="100" value="100">
           </div>
         </div>
         <div class="tab-content hidden" data-tab-content="arrange">
@@ -405,6 +394,11 @@
 
 <input type="file" id="file-image" accept="image/*" style="display:none">
 
+<!-- NÚT XÓA NỔI (Thùng rác) ĐÃ ĐƯỢC THÊM LẠI -->
+<button id="floating-delete" title="Xóa (Delete)" style="position: absolute; display: none; z-index: 1000; width: 32px; height: 32px; background: #333; color: #fff; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.3); cursor: pointer; align-items: center; justify-content: center;">
+  🗑️
+</button>
+
 <script>
 /* ============================================================
    THAY THÔNG TIN SUPABASE CỦA BẠN
@@ -428,8 +422,6 @@ const SIZE_PRESETS = [
   { name: 'Poster A3', w: 1123, h: 1587 },
   { name: 'YouTube Thumb', w: 1280, h: 720 },
   { name: 'Twitter Post', w: 1024, h: 512 },
- 
-  // === BẠN THÊM CÁC MỤC MỚI TỪ ĐÂY ===
   { name: 'BiA', w: 828, h: 1792, template: 'bia-template' },
   { name: 'BiV', w: 1080, h: 2400, template: 'biv-template' },
   { name: 'Cover Facebook', w: 851, h: 315 }
@@ -632,12 +624,10 @@ $('btn-create-new').addEventListener('click', async () => {
 
   $('btn-create-new').disabled = true;
 
-  // 1. Tìm xem người dùng có chọn mẫu nào không (dựa vào tên)
   const selectedPreset = SIZE_PRESETS.find(s => s.w === w && s.h === h && s.name.includes(name));
   let templateData = null;
 
   if (selectedPreset && selectedPreset.templateDb) {
-    // 2. Nếu có, tải mẫu từ Database về
     const { data: tpl } = await sb.from('templates')
       .select('data')
       .eq('name', selectedPreset.templateDb)
@@ -648,7 +638,6 @@ $('btn-create-new').addEventListener('click', async () => {
     }
   }
 
-  // 3. Tạo dự án với dữ liệu mẫu (nếu có)
   const { data, error } = await sb
     .from('projects')
     .insert({ 
@@ -656,7 +645,7 @@ $('btn-create-new').addEventListener('click', async () => {
       width: w, 
       height: h, 
       user_id: currentUser.id,
-      data: templateData // Nhét dữ liệu mẫu vào đây
+      data: templateData 
     })
     .select()
     .single();
@@ -668,6 +657,7 @@ $('btn-create-new').addEventListener('click', async () => {
   $('modal-new').classList.add('hidden');
   await openProject(data.id);
 });
+
 /* ============================================================
    OPEN PROJECT
 ============================================================ */
@@ -701,14 +691,12 @@ $('btn-back').addEventListener('click', async () => {
 });
 
 /* ============================================================
-   CANVAS
+   CANVAS & SMART GUIDES
 ============================================================ */
 function initCanvas(project) {
   const el = $('c');
   el.width = project.width;
   el.height = project.height;
-
-  // TẮT CACHE VÀ RETINA SCALING ĐỂ TRÁNH LỖI NỬA TRẮNG NỬA ĐEN
 
   canvas = new fabric.Canvas('c', {
     width: project.width,
@@ -716,69 +704,86 @@ function initCanvas(project) {
     backgroundColor: project.background || '#ffffff',
     preserveObjectStacking: true,
     selection: true,
-    enableRetinaScaling: false // <--- Dòng quan trọng nhất để fix lỗi màn hình Retina
+    enableRetinaScaling: false
   });
-  // BẬT CĂN LỀ THÔNG MINH
+  
   enableSmartGuides(canvas);
 
   history = []; historyIndex = -1;
   isRestoring = true;
 
- 
-   if (project.data) {
-    isRestoring = true;
+  // HÀM XỬ LÝ LOAD DỮ LIỆU VÀ BẢO TOÀN THUỘC TÍNH
+  if (project.data) {
     canvas.loadFromJSON(project.data, () => {
       
-      // 1. Xử lý ẢNH NỀN (Background Image) nếu có
+      const loadPromises = [];
+
+      // 1. Load Background
       if (canvas.backgroundImage) {
-        const bgSrc = canvas.backgroundImage.getSrc();
-        if (bgSrc) {
-          canvas.backgroundImage.setSrc(bgSrc, () => {
-            canvas.requestRenderAll();
-          }, { crossOrigin: 'anonymous' });
-        }
+        loadPromises.push(new Promise(resolve => {
+          const bgSrc = canvas.backgroundImage.getSrc();
+          if (!bgSrc) return resolve();
+          canvas.backgroundImage.setSrc(bgSrc, () => resolve(), { crossOrigin: 'anonymous' });
+        }));
       }
 
-      // 2. Xử lý các ẢNH CHÈN (Image Objects)
+      // 2. Load Objects (Bảo toàn góc xoay, scale)
       canvas.getObjects().forEach(obj => {
         if (obj.type === 'image') {
-          obj.set({ objectCaching: false });
           const imgSrc = obj.getSrc();
           if (imgSrc) {
-            obj.setSrc(imgSrc, () => {
-              canvas.requestRenderAll();
-            }, { crossOrigin: 'anonymous' });
+            const savedAngle = obj.angle;
+            const savedScaleX = obj.scaleX;
+            const savedScaleY = obj.scaleY;
+            const savedLeft = obj.left;
+            const savedTop = obj.top;
+
+            loadPromises.push(new Promise(resolve => {
+              obj.setSrc(imgSrc, () => {
+                // Trả lại các thuộc tính đã lưu để không bị reset
+                obj.set({
+                  angle: savedAngle,
+                  scaleX: savedScaleX,
+                  scaleY: savedScaleY,
+                  left: savedLeft,
+                  top: savedTop
+                });
+                obj.setCoords();
+                resolve();
+              }, { crossOrigin: 'anonymous' });
+            }));
           }
         }
       });
-      
-      canvas.calcOffset();
-      canvas.renderAll();
-      isRestoring = false;
-      
-      // 3. QUAN TRỌNG: Ép Canvas tự động vẽ lại liên tục trong 2 giây đầu
-      // Để đảm bảo dù ảnh tải nhanh hay chậm thì nó cũng phải hiện ra
-      let renderCount = 0;
-      const forceRenderInterval = setInterval(() => {
+
+      // 3. Đợi tất cả ảnh load xong mới Render
+      Promise.all(loadPromises).then(() => {
+        canvas.calcOffset();
         canvas.renderAll();
-        renderCount++;
-        if (renderCount > 10) clearInterval(forceRenderInterval); // Dừng sau 10 lần (khoảng 2 giây)
-      }, 200);
-      
-      saveHistory();
-      refreshLayers();
-      updateObjectPanel();
+        isRestoring = false;
+        
+        // Fallback render liên tục trong 1 giây để chống lỗi mạng lag
+        let count = 0;
+        const interval = setInterval(() => {
+          canvas.renderAll();
+          if (++count > 5) clearInterval(interval);
+        }, 200);
+
+        saveHistory();
+        refreshLayers();
+        updateObjectPanel();
+      });
+
     });
   } else {
-    // ... (Phần còn lại giữ nguyên)
-    // Nếu là dự án MỚI TẠO, kiểm tra xem có template không
     isRestoring = false;
     if (project.name.includes('Bi') || (project.width === 828 && project.height === 1792 && project.name.includes('A'))) {
       applyTikTokTemplate();
     } else {
-      saveHistory(); // Nếu không có template thì tạo canvas trống
+      saveHistory();
     }
   }
+
   requestAnimationFrame(fitToScreen);
   setTimeout(fitToScreen, 100);
 
@@ -790,89 +795,6 @@ function initCanvas(project) {
   canvas.on('selection:cleared', () => { updateObjectPanel(); refreshLayers(); });
 }
 
- function applyTikTokTemplate() {
-  // 1. TẠO ẢNH NỀN (Bị khóa cứng, không thể sửa/xóa)
-  // DÁN LINK ẢNH SUPABASE CỦA BẠN VÀO ĐÂY
-  const bgUrl = 'https://hltrwkihjihjfkweinqo.supabase.co/storage/v1/object/public/design-assets/tiktok-bg.jpg'; 
-  
-  fabric.Image.fromURL(bgUrl, (img) => {
-    // Tính toán để ảnh phủ kín canvas (cover)
-    const scale = Math.max(canvas.getWidth() / img.width, canvas.getHeight() / img.height);
-    img.set({
-      scaleX: scale,
-      scaleY: scale,
-      originX: 'center',
-      originY: 'center',
-      left: canvas.getWidth() / 2,
-      top: canvas.getHeight() / 2,
-      selectable: false, // KHÓA: Không thể click chọn
-      evented: false,    // KHÓA: Không nhận sự kiện chuột
-      hoverCursor: 'default'
-    });
-    
-    // Gán làm ảnh nền của Canvas
-    canvas.setBackgroundImage(img, () => {
-      canvas.renderAll();
-      // Lưu lại lịch sử sau khi đã load xong ảnh nền
-      saveHistory(); 
-    });
-  }, { crossOrigin: 'anonymous' });
-
-  // 2. TẠO CHỮ (Có thể sửa được bình thường)
-  const titleText = new fabric.Textbox('Nhập tiêu đề video của bạn', {
-    left: canvas.getWidth() / 2,
-    top: canvas.getHeight() - 500, // Cách đáy 500px
-    originX: 'center',
-    fontFamily: 'Inter',
-    fontSize: 80,
-    fontWeight: 'bold',
-    fill: '#ffffff',
-    textAlign: 'center',
-    width: 900,
-    shadow: 'rgba(0,0,0,0.8) 0px 4px 15px', // Đổ bóng đen để chữ nổi bật trên nền
-    splitByGrapheme: true,
-    objectCaching: false
-  });
-
-  // 3. TẠO NÚT BẤM (Có thể sửa được)
-  const btnBg = new fabric.Rect({
-    width: 400,
-    height: 110,
-    fill: '#ff0050', // Màu đỏ TikTok
-    rx: 55, ry: 55,  // Bo góc tròn
-    left: canvas.getWidth() / 2,
-    top: canvas.getHeight() - 250, // Cách đáy 250px
-    originX: 'center',
-    originY: 'center',
-    shadow: 'rgba(0,0,0,0.5) 0px 4px 10px'
-  });
-
-  const btnText = new fabric.Textbox('Theo dõi ngay', {
-    left: canvas.getWidth() / 2,
-    top: canvas.getHeight() - 250,
-    originX: 'center',
-    originY: 'center',
-    fontFamily: 'Inter',
-    fontSize: 45,
-    fontWeight: 'bold',
-    fill: '#ffffff',
-    textAlign: 'center',
-    width: 400,
-    splitByGrapheme: true,
-    objectCaching: false
-  });
-
-  // Thêm chữ và nút vào Canvas (Ảnh nền đã nằm dưới cùng rồi)
-  canvas.add(titleText);
-  canvas.add(btnBg);
-  canvas.add(btnText);
-  
-  // Đặt lịch sử (Undo/Redo)
-  canvas.renderAll();
-  saveHistory();
-  markUnsaved();
-}
-// Hàm vẽ đường căn lề tự động
 function enableSmartGuides(c) {
   const ctx = c.contextTop;
   let lines = [];
@@ -881,7 +803,6 @@ function enableSmartGuides(c) {
   c.on('object:moving', function(e) {
     const obj = e.target;
     if (!obj) return;
-
     c.clearContext(c.contextTop);
     lines = [];
 
@@ -890,7 +811,6 @@ function enableSmartGuides(c) {
     const canvasH = currentProject ? currentProject.height : c.height / zoom;
 
     const objBox = obj.getBoundingRect();
-    
     let targetsX = [0, canvasW / 2, canvasW];
     let targetsY = [0, canvasH / 2, canvasH];
 
@@ -966,15 +886,96 @@ function enableSmartGuides(c) {
 }
 
 /* ============================================================
-   HISTORY
+   LOGIC NÚT XÓA NỔI (CANVA STYLE)
 ============================================================ */
+const floatingDelete = document.getElementById('floating-delete');
+
+function updateFloatingDelete() {
+  const activeObj = canvas.getActiveObject();
+  if (!activeObj || activeObj.isEditing) {
+    floatingDelete.style.display = 'none';
+    return;
+  }
+  
+  const boundingRect = activeObj.getBoundingRect(true);
+  const left = boundingRect.left + boundingRect.width + 10;
+  const top = boundingRect.top + 10;
+  
+  floatingDelete.style.left = `${left}px`;
+  floatingDelete.style.top = `${top}px`;
+  floatingDelete.style.display = 'flex';
+}
+
+canvas.on('object:moving', updateFloatingDelete);
+canvas.on('object:scaling', updateFloatingDelete);
+canvas.on('object:rotating', updateFloatingDelete);
+canvas.on('selection:created', updateFloatingDelete);
+canvas.on('selection:updated', updateFloatingDelete);
+canvas.on('selection:cleared', () => floatingDelete.style.display = 'none');
+canvas.on('mouse:down', (e) => { if (!e.target) floatingDelete.style.display = 'none'; });
+
+floatingDelete.addEventListener('click', () => {
+  const activeObj = canvas.getActiveObject();
+  if (activeObj) {
+    if (activeObj.type === 'activeSelection') {
+      activeObj.forEachObject(o => canvas.remove(o));
+      canvas.discardActiveObject();
+    } else {
+      canvas.remove(activeObj);
+    }
+    canvas.renderAll();
+    floatingDelete.style.display = 'none';
+    saveHistory();
+    markUnsaved();
+  }
+});
+
+canvas.on('mouse:dblclick', (e) => {
+  const obj = e.target;
+  if (obj && obj.type === 'group') {
+    obj.toActiveSelection();
+    canvas.requestRenderAll();
+    toast('Đã tách nhóm!', 'success');
+  }
+});
+
+
+/* ============================================================
+   CÁC HÀM XỬ LÝ KHÁC
+============================================================ */
+function applyTikTokTemplate() {
+  const bgUrl = 'https://hltrwkihjihjfkweinqo.supabase.co/storage/v1/object/public/design-assets/tiktok-bg.jpg'; 
+  fabric.Image.fromURL(bgUrl, (img) => {
+    const scale = Math.max(canvas.getWidth() / img.width, canvas.getHeight() / img.height);
+    img.set({ scaleX: scale, scaleY: scale, originX: 'center', originY: 'center', left: canvas.getWidth() / 2, top: canvas.getHeight() / 2 });
+    canvas.setBackgroundImage(img, () => canvas.renderAll());
+  }, { crossOrigin: 'anonymous' });
+
+  const titleText = new fabric.Textbox('Nhập tiêu đề video của bạn', {
+    left: canvas.getWidth() / 2, top: canvas.getHeight() - 500, originX: 'center',
+    fontFamily: 'Inter', fontSize: 80, fontWeight: 'bold', fill: '#ffffff',
+    textAlign: 'center', width: 900, shadow: 'rgba(0,0,0,0.8) 0px 4px 15px',
+    splitByGrapheme: true
+  });
+  const btnBg = new fabric.Rect({
+    width: 400, height: 110, fill: '#ff0050', rx: 55, ry: 55,
+    left: canvas.getWidth() / 2, top: canvas.getHeight() - 250, originX: 'center', originY: 'center', shadow: 'rgba(0,0,0,0.5) 0px 4px 10px'
+  });
+  const btnText = new fabric.Textbox('Theo dõi ngay', {
+    left: canvas.getWidth() / 2, top: canvas.getHeight() - 250, originX: 'center', originY: 'center',
+    fontFamily: 'Inter', fontSize: 45, fontWeight: 'bold', fill: '#ffffff', textAlign: 'center', width: 400, splitByGrapheme: true
+  });
+  canvas.add(titleText, btnBg, btnText);
+  canvas.renderAll();
+  saveHistory();
+  markUnsaved();
+}
+
 function saveHistory() {
   if (isRestoring || !canvas) return;
   const json = canvas.toJSON(['id', 'name']);
   if (historyIndex >= 0) {
-    const prev = JSON.stringify(history[historyIndex]);
-    const curr = JSON.stringify(json);
-    if (prev === curr) return;
+    if (JSON.stringify(history[historyIndex]) === JSON.stringify(json)) return;
   }
   history = history.slice(0, historyIndex + 1);
   history.push(json);
@@ -989,10 +990,7 @@ function restoreHistory() {
   canvas.loadFromJSON(history[historyIndex], () => {
     canvas.renderAll();
     isRestoring = false;
-    updateUndoRedo();
-    updateObjectPanel();
-    refreshLayers();
-    markUnsaved();
+    updateUndoRedo(); updateObjectPanel(); refreshLayers(); markUnsaved();
   });
 }
 function updateUndoRedo() {
@@ -1000,9 +998,6 @@ function updateUndoRedo() {
   $('btn-redo').disabled = historyIndex >= history.length - 1;
 }
 
-/* ============================================================
-   SAVE (debounced)
-============================================================ */
 function markUnsaved() {
   dirty = true;
   $('save-status').textContent = 'Chưa lưu...';
@@ -1013,28 +1008,18 @@ function markUnsaved() {
 async function saveCurrentProject(silent = false) {
   if (!currentProject || !canvas) return;
   clearTimeout(saveTimer);
-
   const json = canvas.toJSON(['id', 'name']);
   const name = $('project-name-input').value.trim() || currentProject.name;
-  const background = (typeof canvas.backgroundColor === 'string')
-    ? canvas.backgroundColor : '#ffffff';
-
+  const background = (typeof canvas.backgroundColor === 'string') ? canvas.backgroundColor : '#ffffff';
   $('save-status').textContent = 'Đang lưu...';
 
-  const { error } = await sb
-    .from('projects')
-    .update({ name, background, data: json, updated_at: new Date().toISOString() })
-    .eq('id', currentProject.id);
-
+  const { error } = await sb.from('projects').update({ name, background, data: json, updated_at: new Date().toISOString() }).eq('id', currentProject.id);
   if (error) {
     $('save-status').textContent = 'Lỗi lưu';
     if (!silent) toast('Lỗi lưu: ' + error.message, 'error');
     return;
   }
-
-  currentProject.name = name;
-  currentProject.background = background;
-  dirty = false;
+  currentProject.name = name; currentProject.background = background; dirty = false;
   $('save-status').textContent = 'Đã lưu ✓';
   setTimeout(() => { if (!dirty) $('save-status').textContent = ''; }, 1500);
 }
@@ -1042,27 +1027,19 @@ async function saveCurrentProject(silent = false) {
 $('btn-save').addEventListener('click', () => saveCurrentProject(false));
 $('project-name-input').addEventListener('input', () => markUnsaved());
 
-/* ============================================================
-   ZOOM
-============================================================ */
 function applyZoom(z) {
   if (!canvas || !currentProject) return;
   currentZoom = Math.max(0.05, Math.min(4, z));
   canvas.setZoom(currentZoom);
-  
-  canvas.setDimensions({
-    width: currentProject.width * currentZoom,
-    height: currentProject.height * currentZoom
-  }); 
-  
+  canvas.setDimensions({ width: currentProject.width * currentZoom, height: currentProject.height * currentZoom }); 
   canvas.renderAll();
   $('zoom-label').textContent = Math.round(currentZoom * 100) + '%';
+  updateFloatingDelete();
 }
 function fitToScreen() {
   if (!canvas || !currentProject) return;
   const scroll = $('canvas-scroll');
-  const aw = scroll.clientWidth - 60;
-  const ah = scroll.clientHeight - 60;
+  const aw = scroll.clientWidth - 60, ah = scroll.clientHeight - 60;
   if (aw <= 0 || ah <= 0) return;
   applyZoom(Math.min(aw / currentProject.width, ah / currentProject.height, 1));
 }
@@ -1072,21 +1049,12 @@ $('btn-fit').addEventListener('click', fitToScreen);
 $('btn-undo').addEventListener('click', undo);
 $('btn-redo').addEventListener('click', redo);
 
-/* ============================================================
-   TOOLS
-============================================================ */
 function addText() {
   const t = new fabric.Textbox('Nhập văn bản', {
-    left: canvas.getWidth() / 2, top: canvas.getHeight() / 2,
-    originX: 'center', originY: 'center',
-    fontSize: 40, fontFamily: 'Inter', fill: '#1f2937',
-    width: 400, textAlign: 'center',
-    splitByGrapheme: true,
-    objectCaching: false
+    left: canvas.getWidth() / 2, top: canvas.getHeight() / 2, originX: 'center', originY: 'center',
+    fontSize: 40, fontFamily: 'Inter', fill: '#1f2937', width: 400, textAlign: 'center', splitByGrapheme: true
   });
-  canvas.add(t); 
-  canvas.setActiveObject(t); 
-  canvas.renderAll();
+  canvas.add(t); canvas.setActiveObject(t); canvas.renderAll();
 }
 
 function getStarPoints(spikes, outerR, innerR) {
@@ -1111,54 +1079,26 @@ function addShape(type) {
   if (shape) { canvas.add(shape); canvas.setActiveObject(shape); canvas.renderAll(); }
 }
 
-// HÀM TẠO THANH TRẠNG THÁI
 function addStatusBar() {
-  const scale = 2; // Tăng scale để nhìn rõ hơn trên canvas lớn
-  
-  // 1. Sóng di động
+  const scale = 2; 
   const s1 = new fabric.Rect({ width: 4*scale, height: 8*scale, fill: '#333', rx: 1, ry: 1, left: 0, top: 12*scale });
   const s2 = new fabric.Rect({ width: 4*scale, height: 12*scale, fill: '#333', rx: 1, ry: 1, left: 6*scale, top: 8*scale });
   const s3 = new fabric.Rect({ width: 4*scale, height: 16*scale, fill: '#333', rx: 1, ry: 1, left: 12*scale, top: 4*scale });
   const s4 = new fabric.Rect({ width: 4*scale, height: 20*scale, fill: '#333', rx: 1, ry: 1, left: 18*scale, top: 0 });
   const signalGroup = new fabric.Group([s1, s2, s3, s4], { left: 0, top: 0 });
 
-  // 2. Wifi (Dùng path chuẩn)
   const wifiPath = "M12 21a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm-2.8-7.2c1.6-1.2 4-1.2 5.6 0l1.6-1.6a8 8 0 0 0-8.8 0l1.6 1.6zm-3.2-3.2c3.2-2.4 8-2.4 11.2 0l1.6-1.6a12 12 0 0 0-14.4 0l1.6 1.6z";
   const wifiObj = new fabric.Path(wifiPath, { fill: '#333', left: 35*scale, top: 2*scale, scaleX: scale*0.7, scaleY: scale*0.7 });
 
-  // 3. Pin
   const batBody = new fabric.Rect({ width: 24*scale, height: 12*scale, fill: 'transparent', stroke: '#333', strokeWidth: 2*scale, rx: 3*scale, ry: 3*scale, left: 75*scale, top: 4*scale });
   const batTip = new fabric.Rect({ width: 2*scale, height: 4*scale, fill: '#333', rx: 1, ry: 1, left: 100*scale, top: 8*scale });
-  // Cột năng lượng (chỉnh độ rộng width này để thay đổi mức pin)
   const batLevel = new fabric.Rect({ width: 16*scale, height: 6*scale, fill: '#333', rx: 1, ry: 1, left: 78*scale, top: 7*scale }); 
-  
-  // 4. Chữ số % Pin
   const batText = new fabric.Textbox('7', { fontSize: 12*scale, fontFamily: 'Inter', fill: '#333', left: 83*scale, top: 5*scale, width: 20*scale, textAlign: 'center', fontWeight: 'bold' });
 
-  // Gom tất cả lại thành 1 khối
   const statusGroup = new fabric.Group([signalGroup, wifiObj, batBody, batTip, batLevel, batText], {
-    left: canvas.getWidth() / 2,
-    top: canvas.getHeight() / 2,
-    originX: 'center',
-    originY: 'center',
-    name: 'Thanh trạng thái'
+    left: canvas.getWidth() / 2, top: canvas.getHeight() / 2, originX: 'center', originY: 'center', name: 'Thanh trạng thái'
   });
-  
-  canvas.add(statusGroup);
-  canvas.setActiveObject(statusGroup);
-  canvas.renderAll();
-}
-
-// Hàm tách nhóm để chỉnh sửa từng phần
-function ungroupSelected() {
-  const activeObject = canvas.getActiveObject();
-  if (!activeObject || activeObject.type !== 'group') return;
-  
-  activeObject.toActiveSelection();
-  canvas.requestRenderAll();
-  saveHistory();
-  markUnsaved();
-  toast('Đã tách nhóm, giờ bạn có thể sửa từng phần', 'success');
+  canvas.add(statusGroup); canvas.setActiveObject(statusGroup); canvas.renderAll();
 }
 
 document.querySelectorAll('.left-tools button').forEach(b => {
@@ -1171,18 +1111,13 @@ document.querySelectorAll('.left-tools button').forEach(b => {
   });
 });
 
-/* ============================================================
-   IMAGE UPLOAD
-============================================================ */
 $('file-image').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   e.target.value = '';
   if (!file) return;
-
   const uploadBtn = document.querySelector('.left-tools button[data-tool="image"]');
   uploadBtn.classList.add('uploading');
   toast('Đang tải ảnh lên...');
-
   try {
     const publicUrl = await uploadImageToStorage(file);
     await addImageToCanvas(publicUrl);
@@ -1195,18 +1130,11 @@ $('file-image').addEventListener('change', async (e) => {
 });
 
 async function uploadImageToStorage(file) {
-  if (file.size > 5 * 1024 * 1024) {
-    throw new Error('Ảnh quá lớn (giới hạn 5MB)');
-  }
+  if (file.size > 5 * 1024 * 1024) throw new Error('Ảnh quá lớn (giới hạn 5MB)');
   const ext = (file.name.split('.').pop() || 'png').toLowerCase();
   const path = `${currentUser.id}/${uid()}.${ext}`;
-
-  const { error } = await sb.storage
-    .from(STORAGE_BUCKET)
-    .upload(path, file, { contentType: file.type, upsert: false });
-
+  const { error } = await sb.storage.from(STORAGE_BUCKET).upload(path, file, { contentType: file.type, upsert: false });
   if (error) throw error;
-
   const { data } = sb.storage.from(STORAGE_BUCKET).getPublicUrl(path);
   return data.publicUrl;
 }
@@ -1215,25 +1143,14 @@ function addImageToCanvas(url) {
   return new Promise((resolve, reject) => {
     fabric.Image.fromURL(url, (img) => {
       if (!img.width || !img.height) { reject(new Error('Ảnh không hợp lệ')); return; }
-      const maxW = canvas.getWidth() * 0.6;
-      const maxH = canvas.getHeight() * 0.6;
+      const maxW = canvas.getWidth() * 0.6, maxH = canvas.getHeight() * 0.6;
       const s = Math.min(maxW / img.width, maxH / img.height, 1);
-      img.set({
-        scaleX: s, scaleY: s,
-        left: canvas.getWidth() / 2, top: canvas.getHeight() / 2,
-        originX: 'center', originY: 'center'
-      });
-      canvas.add(img);
-      canvas.setActiveObject(img);
-      canvas.renderAll();
-      resolve();
+      img.set({ scaleX: s, scaleY: s, left: canvas.getWidth() / 2, top: canvas.getHeight() / 2, originX: 'center', originY: 'center' });
+      canvas.add(img); canvas.setActiveObject(img); canvas.renderAll(); resolve();
     }, { crossOrigin: 'anonymous' });
   });
 }
 
-/* ============================================================
-   OBJECT PANEL
-============================================================ */
 function normalizeColor(c) {
   if (typeof c !== 'string') return '#000000';
   if (/^#[0-9a-f]{6}$/i.test(c)) return c;
@@ -1265,8 +1182,7 @@ function updateObjectPanel() {
       b.classList.toggle('active', obj.textAlign === b.dataset.align));
   }
   const op = Math.round((obj.opacity ?? 1) * 100);
-  $('obj-opacity').value = op;
-  $('opacity-val').textContent = op;
+  $('obj-opacity').value = op; $('opacity-val').textContent = op;
   $('pos-x').value = Math.round(obj.left || 0);
   $('pos-y').value = Math.round(obj.top || 0);
   $('pos-w').value = Math.round((obj.width || 0) * (obj.scaleX || 1));
@@ -1367,9 +1283,6 @@ $('btn-delete').addEventListener('click', () => {
   canvas.remove(o); canvas.discardActiveObject(); canvas.renderAll();
 });
 
-/* ============================================================
-   LAYERS
-============================================================ */
 function refreshLayers() {
   const list = $('layer-list');
   if (!canvas) { list.innerHTML = ''; return; }
@@ -1405,9 +1318,6 @@ function refreshLayers() {
   }
 }
 
-/* ============================================================
-   EXPORT
-============================================================ */
 $('btn-download').addEventListener('click', (e) => {
   e.stopPropagation();
   $('download-menu').classList.toggle('hidden');
@@ -1424,22 +1334,13 @@ $('download-menu').querySelectorAll('button').forEach(b => {
 function downloadImage(format, quality, scale) {
   if (!canvas || !currentProject) return;
   try {
-    // Đưa canvas về kích thước gốc 100% để chụp chuẩn xác
-    const oldZoom = canvas.getZoom();
-    const oldWidth = canvas.getWidth();
-    const oldHeight = canvas.getHeight();
-
+    const oldZoom = canvas.getZoom(), oldWidth = canvas.getWidth(), oldHeight = canvas.getHeight();
     canvas.setZoom(1);
     canvas.setDimensions({ width: currentProject.width, height: currentProject.height });
     canvas.renderAll();
 
-    const dataURL = canvas.toDataURL({
-      format: format === 'jpeg' ? 'jpeg' : 'png',
-      quality: parseFloat(quality) || 1,
-      multiplier: scale 
-    });
+    const dataURL = canvas.toDataURL({ format: format === 'jpeg' ? 'jpeg' : 'png', quality: parseFloat(quality) || 1, multiplier: scale });
 
-    // Trả lại trạng thái zoom cũ
     canvas.setZoom(oldZoom);
     canvas.setDimensions({ width: oldWidth, height: oldHeight });
     canvas.renderAll();
@@ -1454,9 +1355,6 @@ function downloadImage(format, quality, scale) {
   }
 }
 
-/* ============================================================
-   KEYBOARD SHORTCUTS
-============================================================ */
 document.addEventListener('keydown', (e) => {
   if (!canvas) return;
   const tag = (e.target.tagName || '').toLowerCase();
@@ -1474,8 +1372,7 @@ document.addEventListener('keydown', (e) => {
       e.preventDefault();
     }
   } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-    e.preventDefault();
-    e.shiftKey ? redo() : undo();
+    e.preventDefault(); e.shiftKey ? redo() : undo();
   } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
     e.preventDefault(); redo();
   } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
@@ -1483,148 +1380,71 @@ document.addEventListener('keydown', (e) => {
   } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
     e.preventDefault(); saveCurrentProject(false);
   } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'g') {
-    e.preventDefault(); 
-    ungroupSelected();
+    e.preventDefault(); ungroupSelected();
   }
 });
 
-window.addEventListener('beforeunload', (e) => {
-  if (dirty) { e.preventDefault(); e.returnValue = ''; }
-});
-
+window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 document.fonts.ready.then(() => { if (canvas) canvas.renderAll(); });
 
- $('btn-save-template').addEventListener('click', async () => {
+$('btn-save-template').addEventListener('click', async () => {
   if (!currentProject || !canvas) return;
-
-  // Chỉ cho phép tài khoản của bạn lưu mẫu (để bảo mật)
-  if (currentUser.email !== 'icloud.ngdachao@gmail.com') { // <-- THAY EMAIL CỦA BẠN
-    toast('Bạn không có quyền lưu mẫu!', 'error');
-    return;
+  if (currentUser.email !== 'icloud.ngdachao@gmail.com') { 
+    toast('Bạn không có quyền lưu mẫu!', 'error'); return;
   }
-
-  const tplName = prompt('Nhập tên mẫu (VD: TikTok Template):', 'TikTok Template');
+  const tplName = prompt('Nhập tên mẫu:', 'TikTok Template');
   if (!tplName) return;
-
   toast('Đang lưu mẫu...');
-
-  // Xử lý khóa ảnh nền: 
-  // (Nếu bạn muốn thành phần nào không cho user sửa, hãy chọn nó và bấm nút "Khóa" ở panel bên phải, hoặc set code).
-  // Trong Fabric.js, object nào có selectable: false và evented: false sẽ bị khóa cứng.
-  
   const json = canvas.toJSON(['id', 'name']);
-  
-  const { error } = await sb.from('templates').insert({
-    name: tplName,
-    width: currentProject.width,
-    height: currentProject.height,
-    data: json
-  });
-
-  if (error) {
-    toast('Lỗi lưu mẫu: ' + error.message, 'error');
-  } else {
-    toast('Đã lưu mẫu thành công!', 'success');
-  }
+  const { error } = await sb.from('templates').insert({ name: tplName, width: currentProject.width, height: currentProject.height, data: json });
+  if (error) toast('Lỗi lưu mẫu: ' + error.message, 'error');
+  else toast('Đã lưu mẫu thành công!', 'success');
 });
 
- /* ============================================================
-   LOGIC CẮT ẢNH (CROP) GIỐNG CANVA
-============================================================ */
-let isCropping = false;
-let cropOverlay = null;
-let imageToCrop = null;
+// CẮT ẢNH (CROP)
+let isCropping = false, cropOverlay = null, imageToCrop = null;
 
 $('btn-crop').addEventListener('click', () => {
   const o = getActive();
-  
-  // Nếu đang cắt mà bấm lần nữa -> Lưu lại
   if (isCropping) {
     isCropping = false;
     $('btn-crop').innerText = '✂️ Cắt Ảnh';
     $('btn-crop').style.background = '#a855f7';
-    
     if (imageToCrop && cropOverlay) {
-      // Chuyển clipPath sang tương đối (để nó đi theo ảnh khi di chuyển)
       cropOverlay.set({ absolutePositioned: false });
-      
-      // Tính toán lại tọa độ tương đối của khung cắt so với ảnh
-      const zoom = canvas.getZoom();
-      const img = imageToCrop;
-      const rect = cropOverlay;
-      
-      // Lấy góc trên cùng bên trái của ảnh và khung cắt
-      const imgBounds = img.getBoundingRect();
-      const rectBounds = rect.getBoundingRect();
-      
-      // Cập nhật lại kích thước và vị trí của clipPath (tương đối so với ảnh)
+      const zoom = canvas.getZoom(), img = imageToCrop, rect = cropOverlay;
+      const imgBounds = img.getBoundingRect(), rectBounds = rect.getBoundingRect();
       img.clipPath = new fabric.Rect({
         left: (rectBounds.left - imgBounds.left) / zoom,
         top: (rectBounds.top - imgBounds.top) / zoom,
         width: (rectBounds.width / zoom),
         height: (rectBounds.height / zoom),
-        originX: 'left',
-        originY: 'top',
-        absolutePositioned: false
+        originX: 'left', originY: 'top', absolutePositioned: false
       });
-      
       img.set({ selectable: true, opacity: 1 });
-      canvas.remove(cropOverlay); // Xóa khung tím
+      canvas.remove(cropOverlay);
       canvas.setActiveObject(img);
     }
-    canvas.renderAll();
-    saveHistory();
-    markUnsaved();
-    return;
+    canvas.renderAll(); saveHistory(); markUnsaved(); return;
   }
-
-  // Bắt đầu cắt
-  if (!o || o.type !== 'image') { 
-    toast('Vui lòng chọn một bức ảnh để cắt!', 'error'); 
-    return; 
-  }
-  
-  isCropping = true;
-  imageToCrop = o;
+  if (!o || o.type !== 'image') { toast('Vui lòng chọn ảnh!', 'error'); return; }
+  isCropping = true; imageToCrop = o;
   $('btn-crop').innerText = '✅ Lưu Cắt';
-  $('btn-crop').style.background = '#10b981'; // Đổi màu xanh
-  
-  // Làm mờ ảnh gốc
+  $('btn-crop').style.background = '#10b981';
   o.set({ selectable: false, opacity: 0.5 });
-  
-  // Tạo khung cắt màu tím
   cropOverlay = new fabric.Rect({
-    left: o.left,
-    top: o.top,
-    width: o.width * o.scaleX,
-    height: o.height * o.scaleY,
-    originX: o.originX,
-    originY: o.originY,
-    angle: o.angle,
-    fill: 'transparent',
-    stroke: '#a855f7',
-    strokeWidth: 2,
-    strokeDashArray: [5, 5],
-    cornerColor: '#a855f7',
-    cornerStyle: 'circle',
-    absolutePositioned: true // Tạm thời để tuyệt đối để dễ kéo thả
+    left: o.left, top: o.top, width: o.width * o.scaleX, height: o.height * o.scaleY,
+    originX: o.originX, originY: o.originY, angle: o.angle,
+    fill: 'transparent', stroke: '#a855f7', strokeWidth: 2, strokeDashArray: [5, 5],
+    cornerColor: '#a855f7', cornerStyle: 'circle', absolutePositioned: true
   });
-  
-  o.set({ clipPath: cropOverlay }); // Gắn khung vào ảnh để xem trước
-  
-  canvas.add(cropOverlay);
-  canvas.setActiveObject(cropOverlay);
-  canvas.renderAll();
+  o.set({ clipPath: cropOverlay });
+  canvas.add(cropOverlay); canvas.setActiveObject(cropOverlay); canvas.renderAll();
 });
 
-// Tự động cập nhật khung cắt nếu người dùng di chuyển ảnh (khi đang cắt)
 canvas.on('object:moving', (e) => {
   if (isCropping && e.target === imageToCrop && cropOverlay) {
-    cropOverlay.set({
-      left: e.target.left,
-      top: e.target.top,
-      angle: e.target.angle
-    });
+    cropOverlay.set({ left: e.target.left, top: e.target.top, angle: e.target.angle });
   }
 });
 </script>
