@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Netizen Editor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body { font-family: 'Inter', sans-serif; background: #f8f9fa; color: #1f2937; height: 100vh; overflow: hidden; }
   button { cursor: pointer; font-family: inherit; border: none; background: none; }
   input, select { font-family: inherit; }
@@ -23,7 +23,7 @@
     background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   }
   #screen-loading { color: #fff; font-size: 18px; }
-  .auth-card { background: #fff; padding: 40px; border-radius: 14px; width: 400px;
+  .auth-card { background: #fff; padding: 40px; border-radius: 14px; width: 400px; max-width: 90vw;
     box-shadow: 0 20px 60px rgba(0,0,0,.25); }
   .auth-card h1 { font-size: 24px; color: #4f46e5; margin-bottom: 6px; text-align: center; }
   .auth-card .sub { color: #6b7280; font-size: 13px; text-align: center; margin-bottom: 24px; }
@@ -103,9 +103,9 @@
   .workspace-header button:hover { background: #f3f4f6; }
   .workspace-header button:disabled { opacity: .35; cursor: default; }
   #project-name-input { padding: 6px 10px; border: 1px solid transparent; border-radius: 6px;
-    font-weight: 600; font-size: 14px; background: transparent; width: 220px; }
+    font-weight: 600; font-size: 14px; background: transparent; width: 150px; }
   #project-name-input:hover, #project-name-input:focus { border-color: #d1d5db; outline: none; }
-  #save-status { font-size: 12px; color: #6b7280; margin-left: 4px; }
+  #save-status { font-size: 12px; color: #6b7280; margin-left: 4px; display: none; }
   .sep { color: #d1d5db; }
   #zoom-label { min-width: 46px; text-align: center; font-size: 12px; color: #6b7280; }
   #btn-save, #btn-download { background: #4f46e5; color: #fff !important; padding: 7px 16px !important; }
@@ -118,14 +118,15 @@
     font-size: 13px; border-radius: 4px; color: #374151 !important; }
   .dropdown-menu button:hover { background: #f3f4f6; }
 
-  .workspace-main { flex: 1; display: flex; overflow: hidden; }
+  .workspace-main { flex: 1; display: flex; overflow: hidden; position: relative; }
+  
+  /* Desktop Toolbars */
   .left-tools { width: 64px; background: #fff; border-right: 1px solid #e5e7eb;
-    display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 6px; }
+    display: flex; flex-direction: column; align-items: center; padding: 12px 0; gap: 6px; z-index: 10;}
   .left-tools button { width: 44px; height: 44px; border-radius: 8px; font-size: 20px;
     color: #4b5563; transition: background .15s; }
   .left-tools button:hover { background: #f3f4f6; }
-  .left-tools button.uploading { opacity: .5; pointer-events: none; }
-
+  
   .canvas-area { flex: 1; background: #e5e7eb; display: flex; overflow: hidden; }
   #canvas-scroll { flex: 1; overflow: auto; display: flex; background: #e5e7eb; }
   #canvas-inner { margin: auto; padding: 40px; }
@@ -133,7 +134,7 @@
   #c { display: block; }
 
   .right-panel { width: 300px; background: #fff; border-left: 1px solid #e5e7eb;
-    display: flex; flex-direction: column; overflow: hidden; }
+    display: flex; flex-direction: column; overflow: hidden; z-index: 15; }
   #panel-empty, #panel-object { padding: 14px; overflow-y: auto; max-height: 62vh; }
   #panel-empty p { font-size: 13px; color: #9ca3af; text-align: center; margin: 20px 0; }
   .field { margin-bottom: 12px; }
@@ -172,11 +173,84 @@
   .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
     background: #1f2937; color: #fff; padding: 11px 20px; border-radius: 8px;
     font-size: 14px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,.2);
-    animation: slideUp .25s ease; max-width: 90vw; }
+    animation: slideUp .25s ease; max-width: 90vw; pointer-events: none; }
   .toast.error { background: #dc2626; }
   .toast.success { background: #059669; }
   @keyframes slideUp { from { opacity: 0; transform: translate(-50%, 20px); }
     to { opacity: 1; transform: translate(-50%, 0); } }
+
+  /* Floating Delete Button */
+  #floating-delete { position: fixed; display: none; z-index: 9999; width: 36px; height: 36px; 
+    background: #ef4444; color: #fff; border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.3); 
+    cursor: pointer; align-items: center; justify-content: center; font-size: 16px; transition: transform 0.1s; }
+  #floating-delete:active { transform: scale(0.9); }
+
+  /* Nút Toggle Panel (Chỉ hiện trên Mobile) */
+  #btn-toggle-panel { display: none; background: #4f46e5; color: #fff !important; }
+
+  /* ==========================================
+     RESPONSIVE CHO MOBILE & TABLET
+     ========================================== */
+  @media (max-width: 768px) {
+    /* Header */
+    .workspace-header { padding: 0 8px; gap: 4px; }
+    #project-name-input { width: 100px; font-size: 13px; }
+    .workspace-header .center button { padding: 6px; font-size: 16px; }
+    .workspace-header .center span { display: none; } /* Ẩn chữ Vừa màn hình, zoom % */
+    #btn-save, #btn-download { padding: 6px 10px !important; font-size: 13px; }
+    .right .dropdown { display: none; } /* Ẩn bớt nút tải xuống trên mobile cho đỡ chật, hoặc giữ tùy bạn */
+    
+    /* Hiện nút Toggle Panel */
+    #btn-toggle-panel { display: flex; align-items: center; justify-content: center; }
+
+    /* Main Layout */
+    .workspace-main { flex-direction: column; }
+    
+    /* Thanh công cụ chuyển xuống dưới */
+    .left-tools { 
+      width: 100%; height: 60px; flex-direction: row; border-right: none; 
+      border-top: 1px solid #e5e7eb; padding: 0; overflow-x: auto; justify-content: flex-start; 
+      padding: 0 10px; gap: 4px; flex-shrink: 0;
+    }
+    .left-tools button { width: 40px; height: 40px; flex-shrink: 0; font-size: 18px; }
+    
+    /* Vùng Canvas tự co giãn */
+    .canvas-area { height: calc(100vh - 54px - 60px); }
+    #canvas-inner { padding: 15px; } /* Giảm padding cho rộng rãi */
+
+    /* Bảng điều khiển bên phải trượt từ cạnh phải */
+    .right-panel {
+      position: absolute;
+      right: -100%;
+      top: 0;
+      bottom: 0;
+      width: 280px;
+      transition: right 0.3s ease;
+      box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+      z-index: 50;
+    }
+    .right-panel.open { right: 0; }
+    .right-panel::before {
+      content: '✕';
+      position: absolute;
+      top: 10px;
+      left: -40px;
+      width: 40px;
+      height: 40px;
+      background: #fff;
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px 0 0 8px;
+      box-shadow: -4px 0 15px rgba(0,0,0,0.1);
+      cursor: pointer;
+      font-size: 18px;
+      z-index: 55;
+    }
+    /* Khi click nút X để đóng */
+    .right-panel.open::before { content: '✕'; }
+  }
 </style>
 </head>
 <body>
@@ -203,13 +277,13 @@
     <div class="header-right">
       <span id="user-email"></span>
       <button id="btn-logout">Đăng xuất</button>
-      <button id="btn-new-project">+ Tạo thiết kế mới</button>
+      <button id="btn-new-project">+ Tạo mới</button>
     </div>
   </header>
   <main id="dashboard-main">
     <div id="loading-state">Đang tải dự án...</div>
     <div id="project-grid"></div>
-    <div id="empty-state" class="hidden">Chưa có dự án nào. Nhấn <b>“Tạo thiết kế mới”</b> để bắt đầu.</div>
+    <div id="empty-state" class="hidden">Chưa có dự án nào. Nhấn <b>“Tạo mới”</b> để bắt đầu.</div>
   </main>
 </div>
 
@@ -242,8 +316,8 @@
       <span id="save-status"></span>
     </div>
     <div class="center">
-      <button id="btn-undo" title="Hoàn tác (Ctrl+Z)">↶</button>
-      <button id="btn-redo" title="Làm lại (Ctrl+Y)">↷</button>
+      <button id="btn-undo" title="Hoàn tác">↶</button>
+      <button id="btn-redo" title="Làm lại">↷</button>
       <span class="sep">|</span>
       <button id="btn-zoom-out">−</button>
       <span id="zoom-label">100%</span>
@@ -258,11 +332,14 @@
         <div class="dropdown-menu hidden" id="download-menu">
           <button data-format="png" data-quality="1" data-scale="2">PNG chất lượng cao</button>
           <button data-format="jpeg" data-quality="0.92" data-scale="2">JPG (nhẹ hơn)</button>
-          <button data-format="png" data-quality="1" data-scale="1">PNG đúng kích thước gốc</button>
+          <button data-format="png" data-quality="1" data-scale="1">PNG đúng gốc</button>
         </div>
       </div>
+      <!-- Nút mở Panel trên Mobile -->
+      <button id="btn-toggle-panel" title="Bảng điều khiển">⚙️</button>
     </div>
   </header>
+  
   <main class="workspace-main">
     <aside class="left-tools">
       <button data-tool="text" title="Văn bản">T</button>
@@ -272,8 +349,9 @@
       <button data-tool="triangle" title="Tam giác">△</button>
       <button data-tool="star" title="Ngôi sao">☆</button>
       <button data-tool="line" title="Đường kẻ">╱</button>
-      <button data-tool="statusbar" title="Thanh trạng thái (Sóng, Wifi, Pin)">📱</button>
+      <button data-tool="statusbar" title="Thanh trạng thái">📱</button>
     </aside>
+    
     <section class="canvas-area">
       <div id="canvas-scroll">
         <div id="canvas-inner">
@@ -281,7 +359,9 @@
         </div>
       </div>
     </section>
-    <aside class="right-panel">
+    
+    <!-- Right Panel (Chứa các thuộc tính) -->
+    <aside class="right-panel" id="right-panel">
       <div id="panel-empty">
         <p>Chọn đối tượng để chỉnh sửa</p>
         <div class="field">
@@ -289,35 +369,38 @@
           <input type="color" id="bg-color" value="#ffffff">
         </div>
       </div>
+      
       <div id="panel-object" class="hidden">
         <div class="tabs">
           <button data-tab="style" class="tab active">Kiểu</button>
           <button data-tab="arrange" class="tab">Sắp xếp</button>
           <button data-tab="pos" class="tab">Vị trí</button>
         </div>
+        
         <div class="tab-content" data-tab-content="style">
-         <div class="field">
-          <label>Độ mờ: <span id="opacity-val">100</span>%</label>
-          <input type="range" id="obj-opacity" min="0" max="100" value="100">
-        </div>
-        <div class="field">
-          <button id="btn-crop" style="width: 100%; background: #a855f7; color: white; padding: 10px; border-radius: 6px; font-weight: bold; margin-top: 8px;">✂️ Cắt Ảnh</button>
-        </div>
+          <div class="field">
+            <label>Độ mờ: <span id="opacity-val">100</span>%</label>
+            <input type="range" id="obj-opacity" min="0" max="100" value="100">
+          </div>
+          <div class="field">
+            <button id="btn-crop" style="width: 100%; background: #a855f7; color: white; padding: 10px; border-radius: 6px; font-weight: bold; margin-top: 8px;">✂️ Cắt Ảnh</button>
+          </div>
           <div class="field" id="field-color">
-            <label>Màu</label>
+            <label>Màu sắc</label>
             <input type="color" id="obj-color" value="#3b82f6">
           </div>
+          
           <div id="text-fields" style="display:none">
             <div class="field">
               <label>Phông chữ</label>
-             <select id="font-family">
-                <optgroup label="Hệ thống / Phổ biến nhất">
+              <select id="font-family">
+                <optgroup label="Hệ thống">
                   <option value="Arial, sans-serif">Arial</option>
                   <option value="Helvetica, Arial, sans-serif">Helvetica</option>
                   <option value="Roboto">Roboto</option>
-                  <option value="-apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', sans-serif">San Francisco (Apple)</option>
+                  <option value="-apple-system, BlinkMacSystemFont, 'San Francisco', 'Segoe UI', sans-serif">San Francisco</option>
                 </optgroup>
-                <optgroup label="Sans-Serif (Không chân)">
+                <optgroup label="Sans-Serif">
                   <option value="Inter">Inter</option>
                   <option value="Open Sans">Open Sans</option>
                   <option value="Lato">Lato</option>
@@ -328,14 +411,14 @@
                   <option value="Raleway">Raleway</option>
                   <option value="Oswald">Oswald</option>
                   <option value="Bebas Neue">Bebas Neue</option>
-                  <option value="sans-serif">Sans-serif (Mặc định)</option>
+                  <option value="sans-serif">Sans-serif</option>
                 </optgroup>
-                <optgroup label="Serif (Có chân)">
+                <optgroup label="Serif">
                   <option value="Playfair Display">Playfair Display</option>
                   <option value="Times New Roman, serif">Times New Roman</option>
-                  <option value="serif">Serif (Mặc định)</option>
+                  <option value="serif">Serif</option>
                 </optgroup>
-                <optgroup label="Script (Viết tay)">
+                <optgroup label="Script">
                   <option value="Dancing Script">Dancing Script</option>
                   <option value="Lobster">Lobster</option>
                 </optgroup>
@@ -364,6 +447,7 @@
             </div>
           </div>
         </div>
+        
         <div class="tab-content hidden" data-tab-content="arrange">
           <div class="field">
             <button id="btn-forward">Lên một lớp</button>
@@ -372,6 +456,7 @@
             <button id="btn-back-layer">Xuống dưới cùng</button>
           </div>
         </div>
+        
         <div class="tab-content hidden" data-tab-content="pos">
           <div class="field"><label>X</label><input type="number" id="pos-x"></div>
           <div class="field"><label>Y</label><input type="number" id="pos-y"></div>
@@ -384,6 +469,7 @@
           </div>
         </div>
       </div>
+      
       <div class="layers">
         <h3>Lớp</h3>
         <div id="layer-list"></div>
@@ -394,10 +480,8 @@
 
 <input type="file" id="file-image" accept="image/*" style="display:none">
 
-<!-- NÚT XÓA NỔI (FIXED CHO MOBILE) -->
-<button id="floating-delete" title="Xóa" style="position: fixed; display: none; z-index: 9999; width: 40px; height: 40px; background: #ef4444; color: #fff; border-radius: 50%; box-shadow: 0 4px 12px rgba(0,0,0,0.3); cursor: pointer; align-items: center; justify-content: center; font-size: 18px; transition: transform 0.1s;">
-  🗑️
-</button>
+<!-- Nút Xóa Nổi -->
+<button id="floating-delete" title="Xóa">🗑️</button>
 
 <script>
 /* ============================================================
@@ -409,6 +493,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_TQCg1LvbYL4A5OhVC3krGw_zDoaayCJ';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 fabric.Object.prototype.objectCaching = false;
+
 /* ============================================================
    STATE
    ============================================================ */
@@ -423,8 +508,7 @@ const SIZE_PRESETS = [
   { name: 'YouTube Thumb', w: 1280, h: 720 },
   { name: 'Twitter Post', w: 1024, h: 512 },
   { name: 'BiA', w: 828, h: 1792, template: 'bia-template' },
-  { name: 'BiV', w: 1080, h: 2400, template: 'biv-template' },
-  { name: 'Cover Facebook', w: 851, h: 315 }
+  { name: 'BiV', w: 1080, h: 2400, template: 'biv-template' }
 ];
 
 let currentUser = null;
@@ -464,6 +548,19 @@ function hideAll() {
 }
 
 /* ============================================================
+   MOBILE PANEL TOGGLE
+============================================================ */
+$('btn-toggle-panel').addEventListener('click', () => {
+  $('right-panel').classList.toggle('open');
+});
+$('right-panel').addEventListener('click', (e) => {
+  // Nếu click vào vùng trống của panel (không phải nút bấm) và panel đang mở trên mobile
+  if (e.target.id === 'right-panel' || e.target === $('right-panel')) {
+    $('right-panel').classList.remove('open');
+  }
+});
+
+/* ============================================================
    AUTH
 ============================================================ */
 $('btn-send-link').addEventListener('click', async () => {
@@ -486,7 +583,7 @@ $('btn-send-link').addEventListener('click', async () => {
     msg.textContent = 'Lỗi: ' + error.message;
     msg.className = 'error';
   } else {
-    msg.textContent = '✓ Đã gửi! Kiểm tra hộp thư (cả mục Spam) và bấm vào link.';
+    msg.textContent = '✓ Đã gửi! Kiểm tra hộp thư (cả mục Spam).';
     msg.className = '';
   }
 });
@@ -501,7 +598,6 @@ $('btn-logout').addEventListener('click', async () => {
   await sb.auth.signOut();
 });
 
-// Auth state
 sb.auth.onAuthStateChange((event, session) => {
   currentUser = session?.user ?? null;
   $('screen-loading').classList.add('hidden');
@@ -520,7 +616,6 @@ sb.auth.onAuthStateChange((event, session) => {
     }
   }
 });
-
 
 /* ============================================================
    DASHBOARD
@@ -632,21 +727,12 @@ $('btn-create-new').addEventListener('click', async () => {
       .select('data')
       .eq('name', selectedPreset.templateDb)
       .single();
-      
-    if (tpl && tpl.data) {
-      templateData = tpl.data;
-    }
+    if (tpl && tpl.data) templateData = tpl.data;
   }
 
   const { data, error } = await sb
     .from('projects')
-    .insert({ 
-      name, 
-      width: w, 
-      height: h, 
-      user_id: currentUser.id,
-      data: templateData 
-    })
+    .insert({ name, width: w, height: h, user_id: currentUser.id, data: templateData })
     .select()
     .single();
 
@@ -714,10 +800,8 @@ function initCanvas(project) {
 
   if (project.data) {
     canvas.loadFromJSON(project.data, () => {
-      
       const loadPromises = [];
 
-      // 1. Load Background
       if (canvas.backgroundImage) {
         loadPromises.push(new Promise(resolve => {
           const bgSrc = canvas.backgroundImage.getSrc();
@@ -726,26 +810,14 @@ function initCanvas(project) {
         }));
       }
 
-      // 2. Load Objects (Bảo toàn góc xoay, scale)
       canvas.getObjects().forEach(obj => {
         if (obj.type === 'image') {
           const imgSrc = obj.getSrc();
           if (imgSrc) {
-            const savedAngle = obj.angle;
-            const savedScaleX = obj.scaleX;
-            const savedScaleY = obj.scaleY;
-            const savedLeft = obj.left;
-            const savedTop = obj.top;
-
+            const savedAngle = obj.angle, savedScaleX = obj.scaleX, savedScaleY = obj.scaleY, savedLeft = obj.left, savedTop = obj.top;
             loadPromises.push(new Promise(resolve => {
               obj.setSrc(imgSrc, () => {
-                obj.set({
-                  angle: savedAngle,
-                  scaleX: savedScaleX,
-                  scaleY: savedScaleY,
-                  left: savedLeft,
-                  top: savedTop
-                });
+                obj.set({ angle: savedAngle, scaleX: savedScaleX, scaleY: savedScaleY, left: savedLeft, top: savedTop });
                 obj.setCoords();
                 resolve();
               }, { crossOrigin: 'anonymous' });
@@ -754,23 +826,13 @@ function initCanvas(project) {
         }
       });
 
-      // 3. Đợi tất cả ảnh load xong mới Render
       Promise.all(loadPromises).then(() => {
         canvas.calcOffset();
         canvas.renderAll();
         isRestoring = false;
-        
-        let count = 0;
-        const interval = setInterval(() => {
-          canvas.renderAll();
-          if (++count > 5) clearInterval(interval);
-        }, 200);
-
-        saveHistory();
-        refreshLayers();
-        updateObjectPanel();
+        saveHistory(); refreshLayers(); updateObjectPanel();
+        updateFloatingDelete(); // Cập nhật nút xóa
       });
-
     });
   } else {
     isRestoring = false;
@@ -784,12 +846,37 @@ function initCanvas(project) {
   requestAnimationFrame(fitToScreen);
   setTimeout(fitToScreen, 100);
 
-  canvas.on('object:added', () => { if (!isRestoring) { saveHistory(); markUnsaved(); } refreshLayers(); });
-  canvas.on('object:removed', () => { if (!isRestoring) { saveHistory(); markUnsaved(); } refreshLayers(); updateObjectPanel(); });
-  canvas.on('object:modified', () => { if (!isRestoring) { saveHistory(); markUnsaved(); } updateObjectPanel(); canvas.requestRenderAll(); });
-  canvas.on('selection:created', () => { updateObjectPanel(); refreshLayers(); });
-  canvas.on('selection:updated', () => { updateObjectPanel(); refreshLayers(); });
-  canvas.on('selection:cleared', () => { updateObjectPanel(); refreshLayers(); });
+  // Ẩn panel mobile khi chọn object
+  canvas.on('selection:created', () => { updateObjectPanel(); refreshLayers(); updateFloatingDelete(); });
+  canvas.on('selection:updated', () => { updateObjectPanel(); refreshLayers(); updateFloatingDelete(); });
+  canvas.on('selection:cleared', () => { updateObjectPanel(); refreshLayers(); $('floating-delete').style.display = 'none'; });
+  
+  // Cập nhật vị trí nút xóa khi tương tác
+  canvas.on('object:moving', updateFloatingDelete);
+  canvas.on('object:scaling', updateFloatingDelete);
+  canvas.on('object:rotating', updateFloatingDelete);
+  canvas.on('object:modified', () => {
+    if (!isRestoring) { saveHistory(); markUnsaved(); }
+    updateObjectPanel();
+    updateFloatingDelete();
+  });
+  
+  // Cập nhật nút xóa khi cuộn canvas (trên mobile rất quan trọng)
+  $('canvas-scroll').addEventListener('scroll', updateFloatingDelete);
+
+  canvas.on('mouse:wheel', function(opt) {
+    var delta = opt.e.deltaY;
+    var zoom = canvas.getZoom();
+    zoom *= 0.999 ** delta;
+    if (zoom > 4) zoom = 4;
+    if (zoom < 0.05) zoom = 0.05;
+    canvas.zoomToPoint({ x: opt.e.offsetX, y: opt.e.offsetY }, zoom);
+    currentZoom = zoom;
+    $('zoom-label').textContent = Math.round(zoom * 100) + '%';
+    updateFloatingDelete();
+    opt.e.preventDefault();
+    opt.e.stopPropagation();
+  });
 }
 
 function enableSmartGuides(c) {
@@ -830,7 +917,6 @@ function enableSmartGuides(c) {
         if (dist < bestSnapX.dist) bestSnapX = { dist, target: targetsX[j], objPoint: objXPoints[i] };
       }
     }
-
     for (let i = 0; i < objYPoints.length; i++) {
       for (let j = 0; j < targetsY.length; j++) {
         const dist = Math.abs(objYPoints[i] - targetsY[j]);
@@ -842,12 +928,10 @@ function enableSmartGuides(c) {
       obj.left += (bestSnapX.target - bestSnapX.objPoint);
       lines.push({ x1: bestSnapX.target, y1: 0, x2: bestSnapX.target, y2: canvasH, type: 'v' });
     }
-
     if (bestSnapY.target !== null) {
       obj.top += (bestSnapY.target - bestSnapY.objPoint);
       lines.push({ x1: 0, y1: bestSnapY.target, x2: canvasW, y2: bestSnapY.target, type: 'h' });
     }
-
     if (bestSnapX.target !== null || bestSnapY.target !== null) obj.setCoords();
   });
 
@@ -864,13 +948,11 @@ function enableSmartGuides(c) {
       lines.forEach(line => {
         ctx.beginPath();
         if (line.type === 'v') {
-          const x = line.x1 * zoom; 
-          ctx.moveTo(x, 0);
-          ctx.lineTo(x, c.getHeight());
+          ctx.moveTo(line.x1 * zoom, 0);
+          ctx.lineTo(line.x1 * zoom, c.getHeight());
         } else {
-          const y = line.y1 * zoom;
-          ctx.moveTo(0, y);
-          ctx.lineTo(c.getWidth(), y);
+          ctx.moveTo(0, line.y1 * zoom);
+          ctx.lineTo(c.getWidth(), line.y1 * zoom);
         }
         ctx.strokeStyle = '#a855f7'; 
         ctx.lineWidth = 1.5; 
@@ -883,38 +965,35 @@ function enableSmartGuides(c) {
 }
 
 /* ============================================================
-   LOGIC NÚT XÓA NỔI (FIXED CHO MOBILE)
+   LOGIC NÚT XÓA NỔI
 ============================================================ */
 const floatingDelete = document.getElementById('floating-delete');
 
-// Sử dụng sự kiện after:render để nút luôn bám theo vật thể khi zoom/scroll
-canvas.on('after:render', () => {
+function updateFloatingDelete() {
   const activeObj = canvas.getActiveObject();
   if (!activeObj || activeObj.isEditing) {
     floatingDelete.style.display = 'none';
     return;
   }
+
+  // Lấy tọa độ của góc trên bên phải của object (đã tính cả zoom & xoay)
+  const coords = activeObj.oCoords.tr; 
   
-  // Lấy tọa độ thực tế của vùng chứa canvas trên màn hình
+  // Lấy vị trí thực tế của canvas trên màn hình
   const canvasRect = canvas.upperCanvasEl.getBoundingClientRect();
-  
-  // Lấy tọa độ của vật thể (đã bao gồm zoom)
-  const objRect = activeObj.getBoundingRect(true); 
-  
-  // Tính vị trí góc trên bên phải của vật thể + khoảng cách 15px
-  const left = canvasRect.left + objRect.left + objRect.width + 15;
-  const top = canvasRect.top + objRect.top - 15;
-  
+
+  // Tính vị trí cho nút xóa (thêm 10px lề)
+  const left = canvasRect.left + coords.x + 10;
+  const top = canvasRect.top + coords.y - 10;
+
   floatingDelete.style.left = `${left}px`;
   floatingDelete.style.top = `${top}px`;
   floatingDelete.style.display = 'flex';
-});
+}
 
-// Bấm nút xóa
 floatingDelete.addEventListener('click', (e) => {
   e.preventDefault();
   e.stopPropagation();
-  
   const activeObj = canvas.getActiveObject();
   if (activeObj) {
     if (activeObj.type === 'activeSelection') {
@@ -927,14 +1006,11 @@ floatingDelete.addEventListener('click', (e) => {
     canvas.requestRenderAll();
     saveHistory();
     markUnsaved();
+    updateObjectPanel();
   }
 });
 
-// Ẩn nút khi click ra vùng trống
-canvas.on('mouse:down', (e) => { 
-  if (!e.target) floatingDelete.style.display = 'none'; 
-});
-
+// Sự kiện double click để tách nhóm
 canvas.on('mouse:dblclick', (e) => {
   const obj = e.target;
   if (obj && obj.type === 'group') {
@@ -958,8 +1034,7 @@ function applyTikTokTemplate() {
   const titleText = new fabric.Textbox('Nhập tiêu đề video của bạn', {
     left: canvas.getWidth() / 2, top: canvas.getHeight() - 500, originX: 'center',
     fontFamily: 'Inter', fontSize: 80, fontWeight: 'bold', fill: '#ffffff',
-    textAlign: 'center', width: 900, shadow: 'rgba(0,0,0,0.8) 0px 4px 15px',
-    splitByGrapheme: true
+    textAlign: 'center', width: 900, shadow: 'rgba(0,0,0,0.8) 0px 4px 15px', splitByGrapheme: true
   });
   const btnBg = new fabric.Rect({
     width: 400, height: 110, fill: '#ff0050', rx: 55, ry: 55,
@@ -994,7 +1069,7 @@ function restoreHistory() {
   canvas.loadFromJSON(history[historyIndex], () => {
     canvas.renderAll();
     isRestoring = false;
-    updateUndoRedo(); updateObjectPanel(); refreshLayers(); markUnsaved();
+    updateUndoRedo(); updateObjectPanel(); refreshLayers(); markUnsaved(); updateFloatingDelete();
   });
 }
 function updateUndoRedo() {
@@ -1038,6 +1113,7 @@ function applyZoom(z) {
   canvas.setDimensions({ width: currentProject.width * currentZoom, height: currentProject.height * currentZoom }); 
   canvas.renderAll();
   $('zoom-label').textContent = Math.round(currentZoom * 100) + '%';
+  updateFloatingDelete();
 }
 function fitToScreen() {
   if (!canvas || !currentProject) return;
@@ -1284,6 +1360,7 @@ $('btn-duplicate').addEventListener('click', () => {
 $('btn-delete').addEventListener('click', () => {
   const o = getActive(); if (!o) return;
   canvas.remove(o); canvas.discardActiveObject(); canvas.renderAll();
+  floatingDelete.style.display = 'none';
 });
 
 function refreshLayers() {
@@ -1372,6 +1449,7 @@ document.addEventListener('keydown', (e) => {
         canvas.discardActiveObject();
       } else canvas.remove(active);
       canvas.renderAll();
+      floatingDelete.style.display = 'none';
       e.preventDefault();
     }
   } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
